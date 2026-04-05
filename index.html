@@ -198,29 +198,63 @@ header{text-align:center;padding:22px 16px 8px;position:relative;z-index:2;}
 .trans-sub{font-family:'Courier New',monospace;font-size:9px;color:#9999bb;letter-spacing:1px;}
 
 /* ── BATTLE ── */
-#battle-screen{padding:0 8px 16px;}
+#battle-screen{padding:0 10px 16px;}
 .round-banner{text-align:center;padding:8px 16px 2px;}
 .round-name{font-family:'Bangers',Impact,cursive;font-size:clamp(20px,4.5vw,32px);
   color:#ffcb05;letter-spacing:2px;animation:slideDown .4s ease;}
 .round-info{font-family:'Courier New',monospace;font-size:8px;color:#8888aa;
   margin-top:4px;letter-spacing:1px;}
 .battle-hint{font-family:'Courier New',monospace;font-size:8px;color:#9999bb;
-  text-align:center;margin:6px 0 0;letter-spacing:1px;}
-.battle-arena{display:flex;align-items:stretch;justify-content:center;
-  gap:clamp(4px,2vw,12px);max-width:900px;margin:0 auto;padding:8px 0;}
-.vs-col{display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.vs-text{font-family:'Bangers',Impact,cursive;font-size:clamp(22px,4.5vw,38px);
+  text-align:center;margin:4px 0 0;letter-spacing:1px;}
+
+/* VERTICAL stacked layout on mobile, side-by-side on tablet/desktop */
+.battle-arena{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0;
+  max-width:520px;
+  margin:0 auto;
+  padding:6px 0;
+}
+@media(min-width:600px){
+  .battle-arena{
+    flex-direction:row;
+    align-items:stretch;
+    max-width:900px;
+    gap:clamp(4px,2vw,12px);
+  }
+}
+.vs-col{
+  display:flex;align-items:center;justify-content:center;
+  padding:4px 0;
+  flex-shrink:0;
+}
+.vs-text{font-family:'Bangers',Impact,cursive;font-size:clamp(28px,8vw,48px);
   color:#ffcb05;text-shadow:3px 3px 0 #e3350d;
   animation:pulse 1.5s ease-in-out infinite;}
 .battle-controls{display:flex;justify-content:center;gap:10px;
   margin-top:8px;flex-wrap:wrap;}
 
 /* ── POKE CARD ── */
-.poke-card{flex:1;max-width:420px;background:#13132a;color:#f0f0ff;
+.poke-card{
+  width:100%;max-width:520px;
+  background:#13132a;color:#f0f0ff;
   border:2px solid #252545;border-radius:18px;
-  padding:8px 8px 10px;display:flex;flex-direction:column;
-  align-items:center;gap:5px;cursor:pointer;
-  transition:all .25s;position:relative;overflow:hidden;}
+  padding:10px 12px 12px;
+  display:flex;flex-direction:row;  /* image left, info right on mobile */
+  align-items:center;
+  gap:12px;cursor:pointer;
+  transition:all .25s;position:relative;overflow:hidden;
+}
+@media(min-width:600px){
+  .poke-card{
+    flex:1;max-width:420px;
+    flex-direction:column;
+    align-items:center;
+    gap:7px;
+  }
+}
 .poke-card::before{content:'';position:absolute;inset:0;
   background:var(--ac,#3b4cca);opacity:.05;pointer-events:none;}
 .poke-card:hover{transform:translateY(-3px) scale(1.01);}
@@ -237,10 +271,25 @@ header{text-align:center;padding:22px 16px 8px;position:relative;z-index:2;}
 .poke-card.loser{animation:loseShake .5s ease forwards;
   cursor:default;pointer-events:none;}
 .poke-card.locked{pointer-events:none;}
-.poke-num{font-family:'Courier New',monospace;font-size:7px;
-  color:#6666aa;align-self:flex-start;}
-.poke-img-wrap{width:clamp(140px,44vw,240px);height:clamp(140px,44vw,240px);
-  display:flex;align-items:center;justify-content:center;position:relative;}
+.poke-info{
+  flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;
+}
+@media(min-width:600px){
+  .poke-info{align-items:center;}
+}
+.poke-num{font-family:'Courier New',monospace;font-size:7px;color:#6666aa;}
+.poke-img-wrap{
+  width:clamp(130px,38vw,180px);
+  height:clamp(130px,38vw,180px);
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;position:relative;
+}
+@media(min-width:600px){
+  .poke-img-wrap{
+    width:clamp(120px,20vw,200px);
+    height:clamp(120px,20vw,200px);
+  }
+}
 .poke-img-wrap::after{content:'';position:absolute;bottom:0;left:50%;
   transform:translateX(-50%);width:70%;height:10px;
   background:radial-gradient(ellipse,rgba(0,0,0,.5) 0%,transparent 70%);
@@ -513,7 +562,7 @@ header{text-align:center;padding:22px 16px 8px;position:relative;z-index:2;}
     <div class="clash-score" id="clash-score"></div>
     <div class="clash-types-row" id="clash-types-row"></div>
   </div>
-  <div class="battle-arena">
+  <div class="battle-arena clash-arena">
     <div class="poke-card" id="clash-a" onclick="handleClashPick('a')"></div>
     <div class="vs-col"><div class="vs-text">VS</div></div>
     <div class="poke-card" id="clash-b" onclick="handleClashPick('b')"></div>
@@ -573,13 +622,55 @@ function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Mat
 const bst=stats=>stats.reduce((s,x)=>s+x.base_stat,0);
 function genLbl(id){for(const[g,[mn,mx]] of Object.entries(GEN_RANGES))if(id>=mn&&id<=mx)return['I','II','III','IV'][g-1];return'?';}
 
-// FIXED: dedup before bracket
+// ── WIN HISTORY (persists across sessions) ──
+const WIN_KEY = 'poke_wins_v1';
+function getWins(){
+  try{ return JSON.parse(localStorage.getItem(WIN_KEY)||'{}'); }
+  catch(e){ return {}; }
+}
+function recordWin(pokeId){
+  try{
+    const wins = getWins();
+    wins[pokeId] = (wins[pokeId]||0) + 1;
+    localStorage.setItem(WIN_KEY, JSON.stringify(wins));
+  }catch(e){}
+}
+function getWinCount(pokeId){
+  return getWins()[pokeId] || 0;
+}
+
+// Seed Pokémon by win count — most wins get top seeds (earn byes)
+function seedPokes(pokes){
+  return [...pokes].sort((a,b) => getWinCount(b.id) - getWinCount(a.id));
+}
+
+// Build bracket with smart bye placement
+// Top seeds get byes — no duplicate matches ever
 function mkBracketRound(pokes){
-  const seen=new Set();
-  const unique=pokes.filter(p=>{if(!p)return true;if(seen.has(p.id))return false;seen.add(p.id);return true;});
-  let sz=1;while(sz<unique.length)sz*=2;
-  const pad=[...unique];while(pad.length<sz)pad.push(null);
-  return pad.reduce((acc,_,i,a)=>i%2===0?[...acc,{a:a[i],b:a[i+1],winner:a[i]&&!a[i+1]?a[i]:(!a[i]&&a[i+1]?a[i+1]:null)}]:acc,[]);
+  // Deduplicate by ID
+  const seen = new Set();
+  const unique = pokes.filter(p=>{
+    if(!p || seen.has(p.id)) return false;
+    seen.add(p.id);
+    return true;
+  });
+
+  // Pad to next power of 2
+  let sz=1; while(sz<unique.length) sz*=2;
+
+  // Place byes at the END so top seeds (index 0,1...) get real matches first
+  // and lower seeds get the byes — classic tournament seeding
+  const pad=[...unique];
+  while(pad.length<sz) pad.push(null);
+
+  // Build matches — byes auto-advance silently
+  const matches=[];
+  for(let i=0;i<pad.length;i+=2){
+    const a=pad[i], b=pad[i+1];
+    const winner = a&&!b ? a : !a&&b ? b : null;
+    matches.push({a:a||null, b:b||null, winner});
+  }
+  return matches;
 }
 
 // ══════════════════════════════════════════
@@ -721,16 +812,18 @@ function renderCard(el,poke){
       <span class="stat-num">${s.base_stat}</span>
     </div>`).join('');
   el.innerHTML=`
-    <div class="poke-num">#${String(poke.id).padStart(3,'0')} · GEN ${genLbl(poke.id)}</div>
     <div class="poke-img-wrap">
       <img class="poke-img" src="${imgUrl(poke.id)}" alt="${poke.name}"
         style="filter:drop-shadow(0 4px 14px ${ac}66)"
         onerror="this.onerror=null;this.src='${imgFb(poke.id)}'">
     </div>
-    <div class="poke-name">${poke.name}</div>
-    <div class="poke-types">${typeH}</div>
-    <div class="poke-stats">${statH}</div>
-    <div class="poke-bst">TOTAL: <span>${bst(poke.stats)}</span></div>`;
+    <div class="poke-info">
+      <div class="poke-num">#${String(poke.id).padStart(3,'0')} · GEN ${genLbl(poke.id)}</div>
+      <div class="poke-name">${poke.name}</div>
+      <div class="poke-types">${typeH}</div>
+      <div class="poke-stats">${statH}</div>
+      <div class="poke-bst">TOTAL: <span>${bst(poke.stats)}</span></div>
+    </div>`;
   el.classList.remove('winner','loser','locked');
   setTimeout(()=>{el.querySelectorAll('.stat-fill').forEach(b=>{b.style.width=Math.min(100,(b.dataset.val/255)*100)+'%';});},100);
 }
@@ -748,6 +841,24 @@ function showTransition(label,ms=1500){
     document.getElementById('trans-label').textContent=label;
     document.getElementById('round-transition').classList.add('visible');
     setTimeout(()=>{document.getElementById('round-transition').classList.remove('visible');res();},ms);
+  });
+}
+
+// Brief between-match pause — just dims cards then clears
+function showMatchTransition(){
+  return new Promise(res=>{
+    // Briefly grey out both cards with a fast fade
+    const fa=document.getElementById('fighter-a');
+    const fb=document.getElementById('fighter-b');
+    fa.style.transition='opacity .25s';
+    fb.style.transition='opacity .25s';
+    fa.style.opacity='0';
+    fb.style.opacity='0';
+    setTimeout(()=>{
+      fa.style.opacity='1';
+      fb.style.opacity='1';
+      res();
+    },320);
   });
 }
 
@@ -772,7 +883,9 @@ let _canUndo=false;
 let _replayFn=null;
 
 function startTournament(pokes,mode){
-  const r1=mkBracketRound(shuffle(pokes));
+  // Shuffle first for randomness, then stable-sort by wins so top picks earn byes
+  const seeded = seedPokes(shuffle(pokes));
+  const r1=mkBracketRound(seeded);
   T={bracket:[r1],round:0,match:0,mode};
   _prevState=null;_canUndo=false;
   let m=0;while(m<r1.length&&r1[m].winner!==null)m++;
@@ -818,6 +931,7 @@ function pickWinner(side){
   updateUndoBtn();
   triggerFlash();
   const winner=side==='a'?match.a:match.b;
+  recordWin(winner.id); // track win for smart seeding
   const fa=document.getElementById('fighter-a');
   const fb=document.getElementById('fighter-b');
   fa.classList.add(side==='a'?'winner':'loser','locked');
@@ -830,11 +944,16 @@ function pickWinner(side){
     if(!allDone){
       let next=T.match+1;
       while(next<round.length&&round[next].winner!==null)next++;
-      T.match=next;renderCurrentBattle();return;
+      T.match=next;
+      // Brief swap animation between matches so it's clear something changed
+      await showMatchTransition();
+      renderCurrentBattle();
+      return;
     }
     const winners=round.map(m=>m.winner).filter(Boolean);
     if(winners.length===1){showChampion(winners[0]);return;}
-    const nextRound=mkBracketRound(winners);
+    // Seed winners by win history for next round too
+    const nextRound=mkBracketRound(seedPokes(winners));
     T.bracket.push(nextRound);T.round++;
     _prevState=null;_canUndo=false;updateUndoBtn();
     let nm=0;while(nm<nextRound.length&&nextRound[nm].winner!==null)nm++;
@@ -879,8 +998,11 @@ function renderBracketView(){
         const isChamp=champ&&p.id===champ.id;
         if(match.winner?.id===p.id)e.classList.add(isChamp?'champ':'w');
         else if(match.winner)e.classList.add('l');
+        const wins=getWinCount(p.id);
+        const winsBadge=wins>0?`<span style="font-family:'Courier New',monospace;font-size:7px;color:#ffcb05;flex-shrink:0">${wins}W</span>`:'';
         e.innerHTML=`<img class="b-img" src="${imgFb(p.id)}" alt="${p.name}">
           <span class="b-name" style="${isChamp?'color:#ffcb05':''}">${p.name}</span>
+          ${winsBadge}
           ${match.winner?.id===p.id?'<span style="font-size:10px">⭐</span>':''}`;
         mb.appendChild(e);
         if(pi===0&&match.b){const d=document.createElement('div');d.className='b-divider';mb.appendChild(d);}
