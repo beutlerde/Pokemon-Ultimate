@@ -836,30 +836,14 @@ function setLoad(text,pct){
 // ══════════════════════════════════════════
 //  ROUND TRANSITION
 // ══════════════════════════════════════════
-function showTransition(label,ms=1500){
-  return new Promise(res=>{
-    document.getElementById('trans-label').textContent=label;
-    document.getElementById('round-transition').classList.add('visible');
-    setTimeout(()=>{document.getElementById('round-transition').classList.remove('visible');res();},ms);
-  });
-}
-
-// Brief between-match pause — just dims cards then clears
-function showMatchTransition(){
-  return new Promise(res=>{
-    // Briefly grey out both cards with a fast fade
-    const fa=document.getElementById('fighter-a');
-    const fb=document.getElementById('fighter-b');
-    fa.style.transition='opacity .25s';
-    fb.style.transition='opacity .25s';
-    fa.style.opacity='0';
-    fb.style.opacity='0';
-    setTimeout(()=>{
-      fa.style.opacity='1';
-      fb.style.opacity='1';
-      res();
-    },320);
-  });
+// showTransition kept for compatibility (not called with await anymore)
+function showTransition(label,ms,cb){
+  document.getElementById('trans-label').textContent=label;
+  document.getElementById('round-transition').classList.add('visible');
+  setTimeout(function(){
+    document.getElementById('round-transition').classList.remove('visible');
+    if(cb) cb();
+  }, ms||1500);
 }
 
 // ══════════════════════════════════════════
@@ -900,9 +884,11 @@ function renderCurrentBattle(){
   const rlen=round.length;
   const rname=rlen===1?'🏆 GRAND FINAL!':rlen===2?'⚔️ SEMI-FINALS':rlen===4?'🥊 QUARTER-FINALS':rlen<=8?`🎯 ROUND OF ${rlen*2}`:`⚡ ROUND ${T.round+1}`;
   const real=round.filter(m=>m.a&&m.b);
-  const mnum=real.indexOf(match)+1;
+  // Count real matches completed so far (not byes) for display
+  const completedReal=real.filter(m=>m.winner!==null).length;
+  const currentMatchNum=completedReal+1;
   document.getElementById('round-name').textContent=rname;
-  document.getElementById('round-info').textContent=`MATCH ${mnum} OF ${real.length}`;
+  document.getElementById('round-info').textContent=`MATCH ${Math.min(currentMatchNum,real.length)} OF ${real.length}`;
   const fa=document.getElementById('fighter-a');
   const fb=document.getElementById('fighter-b');
   renderCard(fa,match.a);renderCard(fb,match.b);
@@ -925,43 +911,78 @@ function updateUndoBtn(){
 function pickWinner(side){
   const match=T.bracket[T.round][T.match];
   if(!match||match.winner)return;
+
+  // Lock immediately to prevent double-taps
+  const fa=document.getElementById('fighter-a');
+  const fb=document.getElementById('fighter-b');
+  fa.onclick=null; fb.onclick=null;
+  fa.classList.add('locked'); fb.classList.add('locked');
+
   // Save undo state
   _prevState={bracket:T.bracket.map(r=>r.map(m=>({...m}))),round:T.round,match:T.match};
   _canUndo=true;
   updateUndoBtn();
   triggerFlash();
+
   const winner=side==='a'?match.a:match.b;
-  recordWin(winner.id); // track win for smart seeding
-  const fa=document.getElementById('fighter-a');
-  const fb=document.getElementById('fighter-b');
-  fa.classList.add(side==='a'?'winner':'loser','locked');
-  fb.classList.add(side==='b'?'winner':'loser','locked');
-  fa.onclick=null;fb.onclick=null;
-  setTimeout(async()=>{
+  recordWin(winner.id);
+
+  fa.classList.add(side==='a'?'winner':'loser');
+  fb.classList.add(side==='b'?'winner':'loser');
+
+  // Step 1: wait for winner animation (850ms), then decide what happens next
+  setTimeout(function(){
     match.winner=winner;
     const round=T.bracket[T.round];
-    const allDone=round.every(m=>m.winner!==null);
+    const allDone=round.every(function(m){return m.winner!==null;});
+
     if(!allDone){
+      // More matches in this round — find next real match
       let next=T.match+1;
-      while(next<round.length&&round[next].winner!==null)next++;
+      while(next<round.length&&round[next].winner!==null) next++;
       T.match=next;
-      // Brief swap animation between matches so it's clear something changed
-      await showMatchTransition();
-      renderCurrentBattle();
+      // Fade cards out
+      fa.style.transition='opacity .2s';
+      fb.style.transition='opacity .2s';
+      fa.style.opacity='0';
+      fb.style.opacity='0';
+      // Step 2: after fade, render new battle
+      setTimeout(function(){
+        fa.style.opacity='1';
+        fb.style.opacity='1';
+        renderCurrentBattle();
+      },250);
       return;
     }
-    const winners=round.map(m=>m.winner).filter(Boolean);
-    if(winners.length===1){showChampion(winners[0]);return;}
-    // Seed winners by win history for next round too
+
+    // All matches done — move to next round
+    const winners=round.map(function(m){return m.winner;}).filter(Boolean);
+    if(winners.length===1){
+      showChampion(winners[0]);
+      return;
+    }
+
+    // Build next round seeded by wins
     const nextRound=mkBracketRound(seedPokes(winners));
-    T.bracket.push(nextRound);T.round++;
+    T.bracket.push(nextRound);
+    T.round++;
     _prevState=null;_canUndo=false;updateUndoBtn();
-    let nm=0;while(nm<nextRound.length&&nextRound[nm].winner!==null)nm++;
+    let nm=0;
+    while(nm<nextRound.length&&nextRound[nm].winner!==null) nm++;
     T.match=nm;
+
+    // Show round transition overlay
     const rlen=nextRound.length;
     const label=rlen===1?'🏆 GRAND FINAL!':rlen===2?'⚔️ SEMI-FINALS':rlen===4?'🥊 QUARTER-FINALS':'⚡ NEXT ROUND';
-    await showTransition(label);
-    renderCurrentBattle();
+    document.getElementById('trans-label').textContent=label;
+    document.getElementById('round-transition').classList.add('visible');
+
+    // Step 2: after transition duration, hide overlay and render
+    setTimeout(function(){
+      document.getElementById('round-transition').classList.remove('visible');
+      renderCurrentBattle();
+    },1500);
+
   },850);
 }
 
