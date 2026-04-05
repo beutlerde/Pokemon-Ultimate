@@ -4,11 +4,11 @@
 
 const CACHE_NAME = 'pokemon-ultimate-v1';
 const SHELL_URLS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/Pokemon-Ultimate/',
+  '/Pokemon-Ultimate/index.html',
+  '/Pokemon-Ultimate/manifest.json',
+  '/Pokemon-Ultimate/icon-192.png',
+  '/Pokemon-Ultimate/icon-512.png',
 ];
 
 // ── INSTALL: cache the app shell ──

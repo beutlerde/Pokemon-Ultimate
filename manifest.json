@@ -1,24 +1,27 @@
 {
-  "name": "Pokémon Ultimate",
-  "short_name": "Pokémon",
-  "description": "4 Pokémon battle games in one — Random Picker, Mini Tournament, Mega Tournament & Type Clash. Gen 1–4!",
-  "start_url": "/",
+  "name": "Pok\u00e9mon Ultimate",
+  "short_name": "Pok\u00e9mon",
+  "description": "4 Pok\u00e9mon battle games in one \u2014 Random Picker, Mini Tournament, Mega Tournament & Type Clash. Gen 1\u20134!",
+  "start_url": "/Pokemon-Ultimate/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0b0b18",
   "theme_color": "#0b0b18",
-  "scope": "/",
+  "scope": "/Pokemon-Ultimate/",
   "lang": "en",
-  "categories": ["games", "entertainment"],
+  "categories": [
+    "games",
+    "entertainment"
+  ],
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -29,16 +32,26 @@
     {
       "name": "Random Picker",
       "short_name": "Picker",
-      "description": "Pick two random Pokémon",
-      "url": "/?mode=picker",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+      "description": "Pick two random Pok\u00e9mon",
+      "url": "/Pokemon-Ultimate/?mode=picker",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Mega Tournament",
       "short_name": "Mega",
-      "description": "All Pokémon, one bracket",
-      "url": "/?mode=mega",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+      "description": "All Pok\u00e9mon, one bracket",
+      "url": "/Pokemon-Ultimate/?mode=mega",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
