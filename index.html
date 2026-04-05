@@ -872,7 +872,9 @@ function startTournament(pokes,mode){
   const r1=mkBracketRound(seeded);
   T={bracket:[r1],round:0,match:0,mode};
   _prevState=null;_canUndo=false;
-  let m=0;while(m<r1.length&&r1[m].winner!==null)m++;
+  // Find first match with two real pokemon (skip byes)
+  var m=0;
+  while(m<r1.length&&(r1[m].winner!==null||!r1[m].a||!r1[m].b))m++;
   T.match=m;
   go('battle-screen');
   renderCurrentBattle();
@@ -912,41 +914,46 @@ function pickWinner(side){
   const match=T.bracket[T.round][T.match];
   if(!match||match.winner)return;
 
-  // Lock immediately to prevent double-taps
+  // Lock immediately — prevent any double-taps
   const fa=document.getElementById('fighter-a');
   const fb=document.getElementById('fighter-b');
   fa.onclick=null; fb.onclick=null;
   fa.classList.add('locked'); fb.classList.add('locked');
 
-  // Save undo state
-  _prevState={bracket:T.bracket.map(r=>r.map(m=>({...m}))),round:T.round,match:T.match};
+  // Deep-copy bracket for undo BEFORE mutation
+  _prevState={
+    bracket:JSON.parse(JSON.stringify(T.bracket)),
+    round:T.round,
+    match:T.match
+  };
   _canUndo=true;
   updateUndoBtn();
   triggerFlash();
 
   const winner=side==='a'?match.a:match.b;
   recordWin(winner.id);
-
   fa.classList.add(side==='a'?'winner':'loser');
   fb.classList.add(side==='b'?'winner':'loser');
 
-  // Step 1: wait for winner animation (850ms), then decide what happens next
   setTimeout(function(){
-    match.winner=winner;
-    const round=T.bracket[T.round];
-    const allDone=round.every(function(m){return m.winner!==null;});
+    // Mutate AFTER the copy is safely saved
+    T.bracket[T.round][T.match].winner=winner;
 
-    if(!allDone){
-      // More matches in this round — find next real match
-      let next=T.match+1;
-      while(next<round.length&&round[next].winner!==null) next++;
+    const round=T.bracket[T.round];
+
+    // Find next unplayed real match (two actual pokemon, no winner yet)
+    let next=T.match+1;
+    while(next<round.length && (round[next].winner!==null || !round[next].a || !round[next].b)){
+      next++;
+    }
+
+    // Still matches left in this round
+    if(next<round.length){
       T.match=next;
-      // Fade cards out
       fa.style.transition='opacity .2s';
       fb.style.transition='opacity .2s';
       fa.style.opacity='0';
       fb.style.opacity='0';
-      // Step 2: after fade, render new battle
       setTimeout(function(){
         fa.style.opacity='1';
         fb.style.opacity='1';
@@ -955,29 +962,38 @@ function pickWinner(side){
       return;
     }
 
-    // All matches done — move to next round
-    const winners=round.map(function(m){return m.winner;}).filter(Boolean);
+    // Round complete — collect unique winners (dedup just in case)
+    var seenW=new Set();
+    var winners=round.map(function(m){return m.winner;})
+      .filter(function(w){
+        if(!w||seenW.has(w.id))return false;
+        seenW.add(w.id);return true;
+      });
+
+    // Only one Pokémon left — they're the champion!
     if(winners.length===1){
       showChampion(winners[0]);
       return;
     }
 
-    // Build next round seeded by wins
-    const nextRound=mkBracketRound(seedPokes(winners));
+    // Build next round
+    var nextRound=mkBracketRound(seedPokes(winners));
     T.bracket.push(nextRound);
     T.round++;
     _prevState=null;_canUndo=false;updateUndoBtn();
-    let nm=0;
-    while(nm<nextRound.length&&nextRound[nm].winner!==null) nm++;
+
+    // Find first unplayed match in new round
+    var nm=0;
+    while(nm<nextRound.length && (nextRound[nm].winner!==null || !nextRound[nm].a || !nextRound[nm].b)){
+      nm++;
+    }
     T.match=nm;
 
-    // Show round transition overlay
-    const rlen=nextRound.length;
-    const label=rlen===1?'🏆 GRAND FINAL!':rlen===2?'⚔️ SEMI-FINALS':rlen===4?'🥊 QUARTER-FINALS':'⚡ NEXT ROUND';
+    // Show round transition then render
+    var rlen=nextRound.filter(function(m){return m.a&&m.b;}).length;
+    var label=rlen===1?'🏆 GRAND FINAL!':rlen===2?'⚔️ SEMI-FINALS':rlen===4?'🥊 QUARTER-FINALS':'⚡ NEXT ROUND';
     document.getElementById('trans-label').textContent=label;
     document.getElementById('round-transition').classList.add('visible');
-
-    // Step 2: after transition duration, hide overlay and render
     setTimeout(function(){
       document.getElementById('round-transition').classList.remove('visible');
       renderCurrentBattle();
@@ -988,7 +1004,10 @@ function pickWinner(side){
 
 function handleUndo(){
   if(!_prevState)return;
-  T.bracket=_prevState.bracket;T.round=_prevState.round;T.match=_prevState.match;
+  // Restore deep copy
+  T.bracket=JSON.parse(JSON.stringify(_prevState.bracket));
+  T.round=_prevState.round;
+  T.match=_prevState.match;
   _prevState=null;_canUndo=false;
   renderCurrentBattle();
 }
