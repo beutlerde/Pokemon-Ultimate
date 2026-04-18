@@ -2,7 +2,7 @@
 // Caches the game shell for instant offline loading.
 // Pokémon data & images are cached as they're fetched (cache-then-network).
 
-const CACHE_NAME = 'pokemon-ultimate-v6';
+const CACHE_NAME = 'pokemon-ultimate-v8';
 const SHELL_URLS = [
   '/Pokemon-Ultimate/',
   '/Pokemon-Ultimate/index.html',
