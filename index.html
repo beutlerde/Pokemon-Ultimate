@@ -134,7 +134,7 @@ header{text-align:center;padding:22px 16px 8px;position:relative;z-index:2;}
 .battle-arena{display:flex;flex-direction:column;align-items:center;gap:0;
   max-width:520px;margin:0 auto;padding:6px 0;}
 @media(min-width:600px){
-  .battle-arena{flex-direction:row;align-items:stretch;max-width:900px;gap:12px;}
+  .battle-arena{flex-direction:row;align-items:flex-start;max-width:900px;gap:12px;}
 }
 .vs-col{display:flex;align-items:center;justify-content:center;padding:4px 0;flex-shrink:0;}
 .vs-text{font-family:'Bangers',Impact,cursive;font-size:clamp(28px,8vw,48px);
@@ -149,14 +149,15 @@ header{text-align:center;padding:22px 16px 8px;position:relative;z-index:2;}
 }
 .poke-card::before{content:'';position:absolute;inset:0;background:var(--ac,#3b4cca);opacity:.05;pointer-events:none;}
 .poke-card.winner{border-color:#ffcb05 !important;border-width:3px !important;
-  animation:wflash .4s cubic-bezier(.175,.885,.32,1.275) forwards,chosenPulse 1.5s ease .4s infinite;
-  transform:scale(1.04) !important;z-index:2;}
+  box-shadow:0 0 40px rgba(255,203,5,.6),0 0 80px rgba(255,203,5,.2) !important;
+  animation:chosenPulse 1.5s ease infinite;
+  z-index:2;}
 .poke-card.winner::after{content:'WINNER';position:absolute;top:10px;right:10px;
   font-family:monospace;font-size:9px;font-weight:bold;
   color:#ffcb05;background:rgba(0,0,0,.7);padding:3px 8px;
   border-radius:20px;border:1px solid #ffcb05;
   animation:checkIn .3s cubic-bezier(.175,.885,.32,1.275) .15s both;letter-spacing:1px;}
-.poke-card.loser{animation:loseShake .5s ease forwards;cursor:default;pointer-events:none;}
+.poke-card.loser{opacity:.28;filter:grayscale(.9);cursor:default;pointer-events:none;transition:all .4s;}
 .poke-card.locked{pointer-events:none;}
 .poke-info{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;}
 @media(min-width:600px){.poke-info{align-items:center;}}
@@ -508,7 +509,27 @@ function genLbl(id) {
     var g=keys[i]; var r=GEN_RANGES[g];
     if (id>=r[0]&&id<=r[1]) return ['I','II','III','IV'][g-1];
   }
-  return '?';
+  return 'MEGA'; // forms with ID>10000 are mega/alt forms
+}
+
+function cleanName(name) {
+  // Convert "alakazam-mega" -> "MEGA ALAKAZAM"
+  // Convert "charizard-mega-x" -> "MEGA CHARIZARD X"
+  // Convert "kyogre-primal" -> "PRIMAL KYOGRE"
+  // Convert "deoxys-attack" -> "DEOXYS ATTACK"
+  if (!name) return name;
+  var parts = name.split('-');
+  if (parts[parts.length-1]==='mega') {
+    return 'MEGA ' + parts.slice(0,-1).join(' ').toUpperCase();
+  }
+  if (parts[1]==='mega') {
+    // charizard-mega-x -> MEGA CHARIZARD X
+    return 'MEGA ' + parts[0].toUpperCase() + (parts[2]?' '+parts[2].toUpperCase():'');
+  }
+  if (parts[parts.length-1]==='primal') {
+    return 'PRIMAL ' + parts.slice(0,-1).join(' ').toUpperCase();
+  }
+  return parts.join(' ').toUpperCase();
 }
 
 // ═══════════════════════════════════════════════════
@@ -751,8 +772,8 @@ function renderCard(el, poke) {
     +' onerror="this.onerror=null;this.src=\''+imgFb(poke.id)+'\'">'
     +'</div>'
     +'<div class="poke-info">'
-    +'<div class="poke-num">#'+String(poke.id).padStart(3,'0')+' GEN '+genLbl(poke.id)+'</div>'
-    +'<div class="poke-name">'+poke.name+'</div>'
+    +'<div class="poke-num">'+(poke.id>10000?genLbl(poke.id):'#'+String(poke.id).padStart(3,'0')+' GEN '+genLbl(poke.id))+'</div>'
+    +'<div class="poke-name">'+cleanName(poke.name)+'</div>'
     +'<div class="poke-types">'+typeH+'</div>'
     +'<div class="poke-stats">'+statH+'</div>'
     +'<div class="poke-bst">TOTAL: <span>'+bst(poke.stats)+'</span></div>'
@@ -907,7 +928,7 @@ function renderBracketView() {
         var wins=getWinCount(p.id);
         var wb=wins>0?('<span style="font-family:monospace;font-size:7px;color:#ffcb05;flex-shrink:0">'+wins+'W</span>'):'';
         e.innerHTML='<img class="b-img" src="'+imgFb(p.id)+'" alt="'+p.name+'">'
-          +'<span class="b-name"'+(isChamp?' style="color:#ffcb05"':'')+'>'+p.name+'</span>'
+          +'<span class="b-name"'+(isChamp?' style="color:#ffcb05"':'')+'>'+cleanName(p.name)+'</span>'
           +wb+(match.winner&&match.winner.id===p.id?'<span style="font-size:10px">&#11088;</span>':'');
         mb.appendChild(e);
         if(pi===0&&match.b){var d=document.createElement('div');d.className='b-divider';mb.appendChild(d);}
@@ -943,7 +964,7 @@ function showChampion(poke) {
   document.getElementById('champ-card').innerHTML
     ='<div style="font-family:monospace;font-size:7px;color:#8888aa">#'+String(poke.id).padStart(3,'0')+' GEN '+genLbl(poke.id)+'</div>'
     +'<img class="champ-img" src="'+imgUrl(poke.id)+'" alt="'+poke.name+'" onerror="this.onerror=null;this.src=\''+imgFb(poke.id)+'\'">'
-    +'<div class="champ-name">'+poke.name+'</div>'
+    +'<div class="champ-name">'+cleanName(poke.name)+'</div>'
     +'<div class="poke-types" style="justify-content:center">'+typeH+'</div>'
     +'<div style="font-family:monospace;font-size:9px;color:#ffcb05">BASE STATS: '+bst(poke.stats)+'</div>';
   document.getElementById('champ-btns').innerHTML
