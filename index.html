@@ -812,13 +812,15 @@ function initFilters(){
 }
 
 function updateMegaCount(){
-  const n=allIds(state.megaGens).length;
-  const extra=state.megaMegas?61:0;
-  const total=n+extra;
-  let sz=1;while(sz<total)sz*=2;
+  var n=allIds(state.megaGens).length;
+  var extra=state.megaMegas?61:0;
+  var total=n+extra;
+  var sz=1;while(sz<total)sz*=2;
+  var megaTag=extra?(' <span style="color:#ffcb05">(+'+extra+' MEGAS)</span>'):'';
   document.getElementById('mega-count').innerHTML=
-    state.megaTypes.size?'<span style="color:#aaaacc">TYPE FILTER ON — COUNT AT LOAD TIME</span>'
-    :`ALL <b>${total}</b> POKÉMON${extra?` <span style="color:#ffcb05">(+${extra} MEGAS)</span>`:''} · BRACKET: <b>${sz}</b> SLOTS`;
+    state.megaTypes.size
+      ?'<span style="color:#aaaacc">TYPE FILTER ON — COUNT AT LOAD TIME</span>'
+      :'ALL <b>'+total+'</b> POKÉMON'+megaTag+' · BRACKET: <b>'+sz+'</b> SLOTS';
 }
 
 function validateClash(){
@@ -843,7 +845,7 @@ function buildMegaToggle(containerId, stateKey){
     +'border-radius:12px;border:2px solid '+(on?'#ffcb05':'#252545')+';'
     +'background:'+(on?'rgba(255,203,5,.12)':'#090915')+';'
     +'color:'+(on?'#ffcb05':'#777777')+';cursor:pointer;width:100%;'
-    +'font-family:'Courier New',monospace;font-size:9px;letter-spacing:1px;'
+    +'font-family:Courier New,monospace;font-size:9px;letter-spacing:1px;'
     +'transition:all .2s;';
   btn.innerHTML='<span style="font-size:18px">⚡</span>'
     +'<div style="text-align:left">'
