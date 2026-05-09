@@ -16,15 +16,38 @@
 <!-- ALL JS, CSS, AND HTML IN ONE CLEAN SCRIPT BLOCK -->
 <script>
 // ═══════════════════════════════════════════════════
-//  SERVICE WORKER REGISTRATION
+//  SERVICE WORKER — smart offline caching
 // ═══════════════════════════════════════════════════
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('./sw.js')
-      .then(function(reg) { console.log('SW ok', reg.scope); })
-      .catch(function(e) { console.log('SW fail', e); });
+      .then(function(reg) {
+        console.log('[SW] Active:', reg.scope);
+        navigator.serviceWorker.addEventListener('message', function(e) {
+          if (e.data && e.data.type === 'CACHE_SIZE') {
+            var el = document.getElementById('cache-count');
+            if (el) el.textContent = e.data.count + ' POKEMON CACHED OFFLINE';
+          }
+        });
+      })
+      .catch(function(e) { console.log('[SW] Failed:', e); });
   });
 }
+window.addEventListener('online',  function() { updateNetBanner(true); });
+window.addEventListener('offline', function() { updateNetBanner(false); });
+function updateNetBanner(online) {
+  var b = document.getElementById('net-banner');
+  if (b) b.parentNode.removeChild(b);
+  if (!online) {
+    var d = document.createElement('div');
+    d.id = 'net-banner';
+    d.textContent = 'OFFLINE - Showing cached Pokemon only';
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:200;background:#705746;'
+      + 'color:#fff;text-align:center;padding:8px;font-family:monospace;font-size:10px;letter-spacing:1px;';
+    document.body.appendChild(d);
+  }
+}
+if (!navigator.onLine) updateNetBanner(false);
 </script>
 
 <style>
@@ -277,6 +300,9 @@ header{text-align:center;padding:22px 16px 8px;position:relative;z-index:2;}
       <div class="mode-desc">Pick two types — best-of-3, 5, 7, or ALL rounds. Which type rules?</div>
       <div class="mode-badge" style="color:#7AC74C;border-color:#7AC74C">TYPE VS TYPE · BO3/5/7</div>
     </div>
+  </div>
+  <div style="text-align:center;padding:4px 0 16px">
+    <div style="font-family:monospace;font-size:8px;color:#444466;letter-spacing:1px" id="cache-count">PLAY ONCE ONLINE TO CACHE POKEMON OFFLINE</div>
   </div>
 </div>
 
@@ -602,6 +628,9 @@ function go(id) {
   var el = document.getElementById(id);
   if (el) el.classList.add('active');
   window.scrollTo(0,0);
+  if (id === 'home-screen' && navigator.serviceWorker && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage('GET_CACHE_SIZE');
+  }
 }
 
 // ═══════════════════════════════════════════════════
