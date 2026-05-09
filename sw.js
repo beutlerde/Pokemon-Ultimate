@@ -1,8 +1,8 @@
 // Pokemon Ultimate Service Worker v12
 // Two-layer cache: shell (always fast) + pokemon data (cache as you play)
 
-var SHELL_CACHE = 'poke-shell-v12';
-var POKE_CACHE  = 'poke-data-v12';
+var SHELL_CACHE = 'poke-shell-v14';
+var POKE_CACHE  = 'poke-data-v14';
 
 var SHELL_URLS = [
   '/Pokemon-Ultimate/',
@@ -95,13 +95,18 @@ self.addEventListener('fetch', function(event) {
   event.respondWith(fetch(event.request).catch(function() { return caches.match(event.request); }));
 });
 
-// Cache stats for the home screen badge
+// Messages from the app
 self.addEventListener('message', function(event) {
+  // Cache stats for home screen badge
   if (event.data === 'GET_CACHE_SIZE') {
     caches.open(POKE_CACHE).then(function(cache) {
       cache.keys().then(function(keys) {
         event.source.postMessage({type:'CACHE_SIZE', count:keys.length});
       });
     });
+  }
+  // App is asking new SW to take control immediately
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
 });
