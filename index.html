@@ -569,26 +569,79 @@ function recordWin(pokeId) {
   try { var w=getWins(); w[pokeId]=(w[pokeId]||0)+1; localStorage.setItem(WIN_KEY,JSON.stringify(w)); } catch(e) {}
 }
 function getWinCount(pokeId) { return getWins()[pokeId]||0; }
-function seedPokes(pokes) {
-  return pokes.slice().sort(function(a,b){ return getWinCount(b.id)-getWinCount(a.id); });
-}
+// ═══════════════════════════════════════════════════
+//  SMART SEEDING & BYE SYSTEM
+//  Works exactly like March Madness:
+//  - Pokémon sorted by career wins (most wins = top seed)
+//  - Top seeds get byes, bottom seeds fight in round 1
+//  - Seed 1 is placed to meet the weakest possible opponent
+//  - Each Pokémon appears EXACTLY ONCE, never repeated
+//  - Bracket is fixed at start — no changes mid-tournament
+// ═══════════════════════════════════════════════════
 
-// ═══════════════════════════════════════════════════
-//  BRACKET
-// ═══════════════════════════════════════════════════
-function mkBracketRound(pokes) {
+function seedPokes(pokes) {
+  // Deduplicate first — absolutely no repeats
   var seen = {};
   var unique = pokes.filter(function(p) {
-    if (!p||seen[p.id]) return false; seen[p.id]=true; return true;
+    if (!p || seen[p.id]) return false;
+    seen[p.id] = true;
+    return true;
   });
-  var sz=1; while(sz<unique.length) sz*=2;
-  var pad=unique.slice(); while(pad.length<sz) pad.push(null);
-  var matches=[];
-  for(var i=0;i<pad.length;i+=2) {
-    var a=pad[i],b=pad[i+1];
-    var winner=a&&!b?a:(!a&&b?b:null);
-    matches.push({a:a,b:b,winner:winner});
+  // Sort by career wins descending — most wins = seed 1
+  return unique.sort(function(a,b) {
+    return getWinCount(b.id) - getWinCount(a.id);
+  });
+}
+
+function mkBracketRound(pokes) {
+  // pokes should already be seeded and deduped by seedPokes()
+  var n = pokes.length;
+  if (n === 0) return [];
+
+  // Find next power of 2
+  var sz = 1;
+  while (sz < n) sz *= 2;
+  var byeCount = sz - n;
+
+  // PROPER SEEDING PLACEMENT (March Madness style):
+  // Create seeded positions: 1 vs last, 2 vs second-last, etc.
+  // Byes go to TOP seeds (lowest index = highest seed)
+  // So if we have 10 Pokémon and need 16 slots (6 byes):
+  // Seeds 1-6 get byes, seeds 7-10 fight in round 1
+
+  // Build the seeded bracket slots
+  // Standard bracket seeding order: 1,16,8,9,5,12,4,13,6,11,3,14,7,10,2,15
+  function buildSeedOrder(size) {
+    if (size === 1) return [1];
+    var half = size / 2;
+    var left = buildSeedOrder(half);
+    var result = [];
+    for (var i = 0; i < left.length; i++) {
+      result.push(left[i]);
+      result.push(size + 1 - left[i]);
+    }
+    return result;
   }
+
+  var seedOrder = buildSeedOrder(sz); // e.g. [1,16,8,9,4,13,5,12,...]
+
+  // Build slots positionally:
+  // seedOrder[pos] = which seed number goes in that position
+  // seed <= n means real pokemon, seed > n means bye
+  var slots = [];
+  for (var pos = 0; pos < sz; pos++) {
+    var seed = seedOrder[pos];
+    slots.push(seed <= n ? pokes[seed - 1] : null);
+  }
+
+  var matches = [];
+  for (var i = 0; i < slots.length; i += 2) {
+    var a = slots[i], b = slots[i+1];
+    // Auto-advance if one side is a bye
+    var winner = (a && !b) ? a : (!a && b) ? b : null;
+    matches.push({a: a, b: b, winner: winner, isBye: winner !== null});
+  }
+
   return matches;
 }
 
@@ -838,7 +891,29 @@ var _canUndo = false;
 var _replayFn = null;
 
 function startTournament(pokes, mode) {
-  var seeded = seedPokes(shuffle(pokes));
+  // Seed once at start: deduplicate + sort by wins
+  // Then shuffle WITHIN each seed tier so same-win Pokémon are random
+  var wins = {};
+  pokes.forEach(function(p) { wins[p.id] = getWinCount(p.id); });
+  
+  // Group by win count, shuffle within each group for variety
+  var groups = {};
+  pokes.forEach(function(p) {
+    var w = wins[p.id];
+    if (!groups[w]) groups[w] = [];
+    groups[w].push(p);
+  });
+  // Shuffle within each group
+  Object.keys(groups).forEach(function(w) {
+    groups[w] = shuffle(groups[w]);
+  });
+  // Rebuild sorted list: high wins first, shuffled within tier
+  var winLevels = Object.keys(groups).map(Number).sort(function(a,b){return b-a;});
+  var seeded = [];
+  winLevels.forEach(function(w) {
+    groups[w].forEach(function(p) { seeded.push(p); });
+  });
+
   var r1 = mkBracketRound(seeded);
   T = {bracket:[r1],round:0,match:0,mode:mode};
   _prevState=null; _canUndo=false;
@@ -904,7 +979,9 @@ function pickWinner(side) {
       if(!w||seenW[w.id])return false; seenW[w.id]=true; return true;
     });
     if (winners.length===1){showChampion(winners[0]);return;}
-    var nextRound=mkBracketRound(seedPokes(winners));
+    // Winners advance in bracket order — no re-seeding needed
+    // The bracket structure already ensures seed 1 path to final
+    var nextRound=mkBracketRound(winners);
     T.bracket.push(nextRound); T.round++;
     _prevState=null; _canUndo=false; updateUndoBtn();
     var nm=0;
@@ -1123,6 +1200,22 @@ function launchMega() {
 // ═══════════════════════════════════════════════════
 var _clash={poolA:[],poolB:[],usedA:{},usedB:{},score:{a:0,b:0,round:0},done:false};
 
+// Build a seeded cycle for clash pools
+// Most-won Pokemon go first, shuffled within same-win tiers (like startTournament)
+function buildClashCycle(pool) {
+  var groups = {};
+  pool.forEach(function(p) {
+    var w = getWinCount(p.id);
+    if (!groups[w]) groups[w] = [];
+    groups[w].push(p);
+  });
+  Object.keys(groups).forEach(function(w) { groups[w] = shuffle(groups[w]); });
+  var levels = Object.keys(groups).map(Number).sort(function(a,b){return b-a;});
+  var cycle = [];
+  levels.forEach(function(w) { groups[w].forEach(function(p){cycle.push(p);}); });
+  return cycle;
+}
+
 function launchClash() {
   var tA=[...state.clashTypeA][0],tB=[...state.clashTypeB][0];
   if(!tA||!tB||tA===tB)return;
@@ -1157,9 +1250,17 @@ function launchClash() {
   promise.then(function() {
     if(!pA.length||!pB.length){alert('Not enough Pokemon for one or both types!');go('clashSetup');return;}
     var spA=shuffle(pA),spB=shuffle(pB);
-    _clash={poolA:spA,poolB:spB,usedA:{},usedB:{},score:{a:0,b:0,round:0},done:false};
-    _clash.usedA[spA[0].id]=true; _clash.usedB[spB[0].id]=true;
-    renderClashRound(spA[0],spB[0]); go('clash-screen');
+    // Build cycle queues — seeded by wins, shuffled within same-win tier
+    var cycA = buildClashCycle(spA);
+    var cycB = buildClashCycle(spB);
+    _clash={
+      poolA:spA, poolB:spB,
+      cycleA:cycA, cycleB:cycB,   // current cycle queue (ordered)
+      posA:0, posB:0,             // position in current cycle
+      cycleNumA:1, cycleNumB:1,   // which cycle we're on (for display)
+      score:{a:0,b:0,round:0}, done:false
+    };
+    renderClashRound(cycA[0], cycB[0]); go('clash-screen');
   }).catch(function(){setLoad('ERROR! CHECK CONNECTION.',0);setTimeout(function(){go('clashSetup');},2000);});
 }
 
@@ -1167,10 +1268,12 @@ function renderClashRound(pA,pB) {
   var tA=[...state.clashTypeA][0]||'',tB=[...state.clashTypeB][0]||'';
   var cA=TC[tA]||'#888',cB=TC[tB]||'#888';
   var maxR=state.clashRounds===999?Math.max(_clash.poolA.length,_clash.poolB.length):state.clashRounds;
+  var cycInfoA = _clash.cycleNumA > 1 ? (' [C'+_clash.cycleNumA+']') : '';
+  var cycInfoB = _clash.cycleNumB > 1 ? (' [C'+_clash.cycleNumB+']') : '';
   document.getElementById('clash-score').innerHTML=
-    '<span style="color:'+cA+'">'+tA.toUpperCase()+' '+_clash.score.a+'</span>'
+    '<span style="color:'+cA+'">'+tA.toUpperCase()+cycInfoA+' '+_clash.score.a+'</span>'
     +'  -  ROUND '+(_clash.score.round+1)+(state.clashRounds===999?'':'/'+maxR)
-    +'  -  <span style="color:'+cB+'">'+_clash.score.b+' '+tB.toUpperCase()+'</span>';
+    +'  -  <span style="color:'+cB+'">'+_clash.score.b+cycInfoB+' '+tB.toUpperCase()+'</span>';
   document.getElementById('clash-types-row').innerHTML=
     '<span class="type-badge" style="background:'+cA+'22;color:'+cA+';border-color:'+cA+'44;font-size:8px;padding:5px 12px">'+(TYPE_EMOJI[tA]||'')+' '+tA+'</span>'
     +'<span style="font-family:monospace;font-size:10px;color:#888">VS</span>'
@@ -1206,13 +1309,23 @@ function handleClashPick(side) {
     return;
   }
   setTimeout(function() {
-    var nA=null,nB=null;
-    for(var i=0;i<_clash.poolA.length;i++){if(!_clash.usedA[_clash.poolA[i].id]){nA=_clash.poolA[i];break;}}
-    for(var i=0;i<_clash.poolB.length;i++){if(!_clash.usedB[_clash.poolB[i].id]){nB=_clash.poolB[i];break;}}
-    if(!nA){_clash.usedA={};nA=_clash.poolA[0];}
-    if(!nB){_clash.usedB={};nB=_clash.poolB[0];}
-    _clash.usedA[nA.id]=true; _clash.usedB[nB.id]=true;
-    renderClashRound(nA,nB);
+    // Advance position A
+    _clash.posA++;
+    if (_clash.posA >= _clash.cycleA.length) {
+      // Cycle A exhausted — build a fresh cycle (re-seeded by current wins)
+      _clash.cycleA = buildClashCycle(_clash.poolA);
+      _clash.posA = 0;
+      _clash.cycleNumA++;
+    }
+    // Advance position B
+    _clash.posB++;
+    if (_clash.posB >= _clash.cycleB.length) {
+      // Cycle B exhausted — build a fresh cycle (re-seeded by current wins)
+      _clash.cycleB = buildClashCycle(_clash.poolB);
+      _clash.posB = 0;
+      _clash.cycleNumB++;
+    }
+    renderClashRound(_clash.cycleA[_clash.posA], _clash.cycleB[_clash.posB]);
   },850);
 }
 
