@@ -1547,41 +1547,61 @@ function updateUndoBtn() {
 
 function pickWinner(side) {
   var match=T.bracket[T.round][T.match];
-  if (!match||match.winner) return;
-  var fa=document.getElementById('fighter-a'), fb=document.getElementById('fighter-b');
-  fa.onclick=null; fb.onclick=null;
-  fa.classList.add('locked'); fb.classList.add('locked');
+  if(!match||match.winner)return;
+  // Show confidence picker first (skip in 2P mode)
+  if(!_twoPlayer){showConfPicker(side);return;}
+  pickWinnerConfirmed(side,null);
+}
+
+function pickWinnerConfirmed(side,confLevel) {
+  var match=T.bracket[T.round][T.match];
+  if(!match||match.winner)return;
+  var fa=document.getElementById('fighter-a'),fb=document.getElementById('fighter-b');
+  fa.onclick=null;fb.onclick=null;
+  fa.classList.add('locked');fb.classList.add('locked');
   _prevState={bracket:JSON.parse(JSON.stringify(T.bracket)),round:T.round,match:T.match};
-  _canUndo=true; updateUndoBtn();
+  _canUndo=true;updateUndoBtn();
   triggerFlash();
   var winner=side==='a'?match.a:match.b;
+  var loser=side==='a'?match.b:match.a;
   recordWin(winner.id);
+  recordMatchup(winner.id,loser.id);
+  updateStreak(winner.id);
+  recordMatchStat(winner,loser,0,0);
+  if(_twoPlayer){if(side==='a')_p1wins++;else _p2wins++;}
   fa.classList.add(side==='a'?'winner':'loser');
   fb.classList.add(side==='b'?'winner':'loser');
-  setTimeout(function() {
+  // Hot streak badge
+  var streakText=getStreakEmoji(_streak.count);
+  if(streakText&&_streak.id===winner.id){
+    var badge=document.createElement('div');badge.className='streak-badge';
+    badge.textContent=streakText;
+    badge.style.background=_streak.count>=7?'#e3350d':_streak.count>=5?'#EE8130':'#3b4cca';
+    (side==='a'?fa:fb).appendChild(badge);
+  }
+  playPickSound(true);
+  setTimeout(function(){
     T.bracket[T.round][T.match].winner=winner;
     var round=T.bracket[T.round];
     var next=T.match+1;
-    while(next<round.length&&(round[next].winner!==null||!round[next].a||!round[next].b)) next++;
-    if (next<round.length) {
+    while(next<round.length&&(round[next].winner!==null||!round[next].a||!round[next].b))next++;
+    if(next<round.length){
       T.match=next;
-      fa.style.transition='opacity .2s'; fb.style.transition='opacity .2s';
-      fa.style.opacity='0'; fb.style.opacity='0';
+      fa.style.transition='opacity .2s';fb.style.transition='opacity .2s';
+      fa.style.opacity='0';fb.style.opacity='0';
       setTimeout(function(){fa.style.opacity='1';fb.style.opacity='1';renderCurrentBattle();},250);
       return;
     }
     var seenW={};
     var winners=round.map(function(m){return m.winner;}).filter(function(w){
-      if(!w||seenW[w.id])return false; seenW[w.id]=true; return true;
+      if(!w||seenW[w.id])return false;seenW[w.id]=true;return true;
     });
-    if (winners.length===1){showChampion(winners[0]);return;}
-    // Winners advance in bracket order — no re-seeding needed
-    // The bracket structure already ensures seed 1 path to final
-    var nextRound=mkBracketRound(winners);
-    T.bracket.push(nextRound); T.round++;
-    _prevState=null; _canUndo=false; updateUndoBtn();
+    if(winners.length===1){showChampion(winners[0]);return;}
+    var nextRound=mkBracketRound(seedPokes(winners));
+    T.bracket.push(nextRound);T.round++;
+    _prevState=null;_canUndo=false;updateUndoBtn();
     var nm=0;
-    while(nm<nextRound.length&&(nextRound[nm].winner!==null||!nextRound[nm].a||!nextRound[nm].b)) nm++;
+    while(nm<nextRound.length&&(nextRound[nm].winner!==null||!nextRound[nm].a||!nextRound[nm].b))nm++;
     T.match=nm;
     var rl=nextRound.filter(function(m){return m.a&&m.b;}).length;
     var label=rl===1?'GRAND FINAL!':rl===2?'SEMI-FINALS':rl===4?'QUARTER-FINALS':'NEXT ROUND';
