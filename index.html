@@ -23,77 +23,15 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
       .then(function(reg) {
         console.log('[SW] Active:', reg.scope);
-
-        // ── AUTO-UPDATE DETECTOR ──
-        // When a new SW is found, show an update banner immediately
-        reg.addEventListener('updatefound', function() {
-          var newWorker = reg.installing;
-          newWorker.addEventListener('statechange', function() {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New version is ready — show the banner
-              showUpdateBanner();
-            }
-          });
-        });
-
-        // Also check for updates every time the page becomes visible
-        document.addEventListener('visibilitychange', function() {
-          if (document.visibilityState === 'visible') {
-            reg.update();
-          }
-        });
-
-        // Cache stats messages
         navigator.serviceWorker.addEventListener('message', function(e) {
           if (e.data && e.data.type === 'CACHE_SIZE') {
             var el = document.getElementById('cache-count');
             if (el) el.textContent = e.data.count + ' POKEMON CACHED OFFLINE';
           }
-          if (e.data && e.data.type === 'UPDATE_READY') {
-            showUpdateBanner();
-          }
         });
       })
       .catch(function(e) { console.log('[SW] Failed:', e); });
   });
-
-  // When a new SW takes control, reload automatically
-  var refreshing = false;
-  navigator.serviceWorker.addEventListener('controllerchange', function() {
-    if (!refreshing) {
-      refreshing = true;
-      window.location.reload();
-    }
-  });
-}
-
-function showUpdateBanner() {
-  // Don't show twice
-  if (document.getElementById('update-banner')) return;
-  var banner = document.createElement('div');
-  banner.id = 'update-banner';
-  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:500;'
-    + 'background:linear-gradient(135deg,#3b4cca,#6390F0);'
-    + 'color:#fff;text-align:center;padding:12px 16px;'
-    + 'font-family:monospace;font-size:11px;letter-spacing:1px;'
-    + 'display:flex;align-items:center;justify-content:center;gap:12px;'
-    + 'box-shadow:0 2px 20px rgba(59,76,202,.6);';
-  banner.innerHTML = '<span>🔄 NEW VERSION AVAILABLE!</span>'
-    + '<button onclick="applyUpdate()" style="background:#ffcb05;color:#0b0b18;'
-    + 'border:none;border-radius:20px;padding:6px 16px;font-family:monospace;'
-    + 'font-size:10px;font-weight:bold;cursor:pointer;letter-spacing:1px;">TAP TO UPDATE</button>'
-    + '<button onclick="this.parentNode.remove()" style="background:transparent;border:none;'
-    + 'color:#ffffff88;font-size:18px;cursor:pointer;padding:0 4px;">✕</button>';
-  document.body.appendChild(banner);
-}
-
-function applyUpdate() {
-  // Tell the new SW to take control immediately
-  if (navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage('SKIP_WAITING');
-  }
-  // Reload will happen via controllerchange event above
-  window.location.reload();
 }
 window.addEventListener('online',  function() { updateNetBanner(true); });
 window.addEventListener('offline', function() { updateNetBanner(false); });
@@ -129,6 +67,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 @keyframes cbounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes champPop{from{transform:scale(.2) rotate(-12deg);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes confettiDrop{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
 @keyframes slideDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes wflash{0%{transform:scale(1);box-shadow:0 0 0 rgba(255,203,5,0);}
   20%{transform:scale(1.08);box-shadow:0 0 60px rgba(255,203,5,.9);}
@@ -296,117 +235,6 @@ header{text-align:center;padding:22px 16px 8px;position:relative;z-index:2;}
 .b-conn-line{width:100%;height:2px;background:#1e1e40;}
 #pick-flash{position:fixed;inset:0;z-index:99;pointer-events:none;
   background:rgba(255,203,5,.12);opacity:0;display:none;}
-
-/* ── BATTLE INTRO ── */
-@keyframes slideInLeft{from{transform:translateX(-120%) scale(.8);opacity:0}to{transform:translateX(0) scale(1);opacity:1}}
-@keyframes slideInRight{from{transform:translateX(120%) scale(.8);opacity:0}to{transform:translateX(0) scale(1);opacity:1}}
-@keyframes typeFlash{0%{opacity:0;transform:scale(.5)}50%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:scale(1.5)}}
-@keyframes upsetBounce{0%{transform:scale(0) rotate(-10deg)}60%{transform:scale(1.15) rotate(3deg)}100%{transform:scale(1) rotate(0)}}
-@keyframes streakPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-@keyframes confettiDrop{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
-@keyframes hofEntry{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
-@keyframes dramaBuild{0%{opacity:0;transform:scale(.9)}100%{opacity:1;transform:scale(1)}}
-
-.intro-slide-left{animation:slideInLeft .45s cubic-bezier(.175,.885,.32,1.275) both;}
-.intro-slide-right{animation:slideInRight .45s cubic-bezier(.175,.885,.32,1.275) both;}
-
-/* Type clash FX banner */
-#type-fx{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  z-index:90;pointer-events:none;font-family:'Bangers',Impact,cursive;
-  font-size:clamp(32px,8vw,64px);letter-spacing:4px;text-align:center;
-  text-shadow:0 0 30px currentColor;display:none;}
-
-/* Rivalry badge */
-#rivalry-banner{position:fixed;top:80px;left:0;right:0;z-index:85;
-  text-align:center;pointer-events:none;display:none;}
-.rivalry-badge{display:inline-block;background:rgba(155,89,182,.9);
-  color:#fff;font-family:monospace;font-size:9px;letter-spacing:1px;
-  padding:6px 16px;border-radius:20px;border:1px solid #9b59b6;
-  animation:slideDown .4s ease;}
-
-/* Hot streak badge on card */
-.streak-badge{position:absolute;top:8px;left:8px;
-  font-family:monospace;font-size:8px;font-weight:bold;
-  color:#fff;padding:3px 8px;border-radius:20px;
-  animation:streakPulse 1s ease infinite;z-index:3;}
-
-/* Upset banner */
-#upset-banner{position:fixed;inset:0;z-index:95;pointer-events:none;
-  display:flex;align-items:center;justify-content:center;display:none;}
-.upset-card{font-family:'Bangers',Impact,cursive;font-size:clamp(36px,9vw,72px);
-  color:#F7D02C;text-shadow:4px 4px 0 #e3350d;letter-spacing:4px;
-  animation:upsetBounce .6s cubic-bezier(.175,.885,.32,1.275);}
-
-/* Type advantage banner */
-#type-adv{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
-  z-index:85;pointer-events:none;font-family:monospace;font-size:9px;
-  letter-spacing:1px;padding:6px 16px;border-radius:20px;
-  display:none;text-align:center;white-space:nowrap;}
-
-/* Confidence picker */
-#conf-picker{position:fixed;bottom:0;left:0;right:0;z-index:88;
-  background:rgba(11,11,24,.95);border-top:2px solid #252545;
-  padding:12px 16px 20px;display:none;flex-direction:column;
-  align-items:center;gap:10px;animation:slideUp .3s ease;}
-.conf-label{font-family:monospace;font-size:9px;color:#9999bb;letter-spacing:1px;}
-.conf-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
-.conf-btn{font-family:monospace;font-size:9px;padding:9px 18px;
-  border-radius:20px;border:2px solid;cursor:pointer;background:transparent;
-  transition:all .2s;}
-
-/* Hall of Fame screen */
-#hof-screen{padding:16px 14px 50px;overflow-y:auto;}
-.hof-entry{display:flex;align-items:center;gap:12px;
-  background:#13132a;border:1px solid #252545;border-radius:12px;
-  padding:10px 14px;margin-bottom:8px;animation:hofEntry .3s ease both;}
-.hof-rank{font-family:'Bangers',Impact,cursive;font-size:22px;
-  color:#ffcb05;width:32px;text-align:center;flex-shrink:0;}
-.hof-img{width:48px;height:48px;object-fit:contain;image-rendering:pixelated;flex-shrink:0;}
-.hof-info{flex:1;min-width:0;}
-.hof-name{font-family:monospace;font-size:10px;color:#f0f0ff;
-  text-transform:uppercase;letter-spacing:1px;}
-.hof-meta{font-family:monospace;font-size:8px;color:#6666aa;margin-top:3px;}
-.hof-bst{font-family:monospace;font-size:9px;color:#ffcb05;flex-shrink:0;}
-
-/* Stats screen */
-#stats-screen{padding:16px 14px 50px;overflow-y:auto;}
-.stat-card{background:#13132a;border:1px solid #252545;border-radius:14px;
-  padding:14px 16px;margin-bottom:10px;}
-.stat-card-title{font-family:monospace;font-size:8px;color:#6666aa;
-  letter-spacing:1px;margin-bottom:8px;}
-.stat-card-val{font-family:'Bangers',Impact,cursive;font-size:28px;
-  color:#ffcb05;line-height:1;}
-.stat-card-sub{font-family:monospace;font-size:9px;color:#9999bb;margin-top:4px;}
-
-/* Two player mode */
-.two-player-banner{background:linear-gradient(135deg,#3b4cca,#6390F0);
-  font-family:monospace;font-size:9px;color:#fff;text-align:center;
-  padding:6px;letter-spacing:1px;}
-.p1-indicator{border-color:#F7D02C !important;box-shadow:0 0 20px rgba(247,208,44,.4) !important;}
-.p2-indicator{border-color:#EE8130 !important;box-shadow:0 0 20px rgba(238,129,48,.4) !important;}
-
-/* Round-by-round bracket */
-#bracket-screen{padding:14px 14px 50px;}
-.bracket-round-nav{display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:12px;gap:8px;}
-.bracket-nav-btn{font-family:monospace;font-size:12px;padding:8px 16px;
-  background:#13132a;border:2px solid #252545;color:#9999bb;
-  border-radius:10px;cursor:pointer;}
-.bracket-nav-btn:disabled{opacity:.3;cursor:default;}
-.bracket-round-title{font-family:'Bangers',Impact,cursive;font-size:24px;
-  color:#ffcb05;letter-spacing:2px;text-align:center;flex:1;}
-.bracket-matchup{display:flex;align-items:stretch;gap:8px;
-  background:#13132a;border:1px solid #252545;border-radius:14px;
-  padding:10px 12px;margin-bottom:8px;}
-.bracket-slot{flex:1;display:flex;align-items:center;gap:8px;}
-.bracket-slot.winner-slot{opacity:1;}
-.bracket-slot.loser-slot{opacity:.3;}
-.b-slot-img{width:36px;height:36px;object-fit:contain;image-rendering:pixelated;flex-shrink:0;}
-.b-slot-name{font-family:monospace;font-size:9px;text-transform:uppercase;
-  letter-spacing:.5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.b-slot-wins{font-family:monospace;font-size:8px;color:#ffcb05;flex-shrink:0;}
-.bracket-vs{font-family:'Bangers',Impact,cursive;font-size:16px;color:#555;flex-shrink:0;}
-.bracket-matchup.bye-match{opacity:.5;border-color:#1a1a2e;}
 #champ-screen{flex-direction:column;align-items:center;padding:18px 16px 50px;gap:14px;}
 .confetti-row{font-size:clamp(20px,4vw,32px);letter-spacing:5px;animation:cbounce 1s ease infinite;}
 .champ-title{font-family:'Bangers',Impact,cursive;font-size:clamp(30px,7vw,56px);
@@ -474,11 +302,7 @@ header{text-align:center;padding:22px 16px 8px;position:relative;z-index:2;}
       <div class="mode-badge" style="color:#7AC74C;border-color:#7AC74C">TYPE VS TYPE · BO3/5/7</div>
     </div>
   </div>
-  <div style="text-align:center;padding:4px 0 8px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-    <button class="back-btn" style="font-size:8px;padding:7px 14px" onclick="go('hof-screen');renderHOF()">HALL OF FAME</button>
-    <button class="back-btn" style="font-size:8px;padding:7px 14px" onclick="showConfStats()">MY STATS</button>
-  </div>
-  <div style="text-align:center;padding:2px 0 12px">
+  <div style="text-align:center;padding:4px 0 16px">
     <div style="font-family:monospace;font-size:8px;color:#444466;letter-spacing:1px" id="cache-count">PLAY ONCE ONLINE TO CACHE POKEMON OFFLINE</div>
   </div>
 </div>
@@ -593,9 +417,6 @@ header{text-align:center;padding:22px 16px 8px;position:relative;z-index:2;}
     <div class="vs-col"><div class="vs-text">VS</div></div>
     <div class="poke-card" id="fighter-b" onclick="pickWinner('b')"></div>
   </div>
-  <div id="two-player-bar" style="display:none">
-    <div class="two-player-banner" id="two-player-banner">PLAYER 1 PICKS LEFT &nbsp;|&nbsp; PLAYER 2 PICKS RIGHT</div>
-  </div>
   <div class="battle-controls" id="battle-controls">
     <button class="back-btn" onclick="viewBracket()">BRACKET</button>
     <button class="back-btn" id="two-p-btn" onclick="toggle2Player()" style="font-size:8px;padding:9px 14px">2P MODE</button>
@@ -641,52 +462,37 @@ header{text-align:center;padding:22px 16px 8px;position:relative;z-index:2;}
   <div class="champ-btns" id="champ-btns"></div>
 </div>
 
-<!-- TYPE FX OVERLAY -->
-<div id="type-fx" style="display:none"></div>
-
-<!-- RIVALRY BANNER -->
-<div id="rivalry-banner" style="display:none"><div class="rivalry-badge" id="rivalry-text"></div></div>
-
-<!-- UPSET BANNER -->
-<div id="upset-banner" style="display:none">
-  <div class="upset-card">UPSET!</div>
-</div>
-
-<!-- TYPE ADVANTAGE BANNER -->
-<div id="type-adv" style="display:none"></div>
-
 <!-- CONFIDENCE PICKER -->
-<div id="conf-picker" style="display:none">
-  <div class="conf-label">HOW CONFIDENT ARE YOU?</div>
-  <div class="conf-btns">
-    <button class="conf-btn" style="color:#2ecc71;border-color:#2ecc71" onclick="submitConf('easy')">EASY PICK</button>
-    <button class="conf-btn" style="color:#F7D02C;border-color:#F7D02C" onclick="submitConf('tough')">TOUGH CALL</button>
-    <button class="conf-btn" style="color:#e3350d;border-color:#e3350d" onclick="submitConf('noidea')">NO IDEA!</button>
+<div id="conf-picker" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:88;background:rgba(11,11,24,.97);border-top:2px solid #252545;padding:14px 16px 24px;flex-direction:column;align-items:center;gap:10px;">
+  <div style="font-family:monospace;font-size:9px;color:#9999bb;letter-spacing:1px">HOW CONFIDENT ARE YOU?</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+    <button onclick="submitConf('easy')" style="font-family:monospace;font-size:9px;padding:9px 18px;border-radius:20px;border:2px solid #2ecc71;color:#2ecc71;background:transparent;cursor:pointer">EASY PICK</button>
+    <button onclick="submitConf('tough')" style="font-family:monospace;font-size:9px;padding:9px 18px;border-radius:20px;border:2px solid #F7D02C;color:#F7D02C;background:transparent;cursor:pointer">TOUGH CALL</button>
+    <button onclick="submitConf('noidea')" style="font-family:monospace;font-size:9px;padding:9px 18px;border-radius:20px;border:2px solid #e3350d;color:#e3350d;background:transparent;cursor:pointer">NO IDEA!</button>
   </div>
 </div>
 
-<!-- HALL OF FAME -->
+<!-- TYPE ADVANTAGE BAR -->
+<div id="type-adv-bar" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:85;pointer-events:none;font-family:monospace;font-size:9px;letter-spacing:1px;padding:6px 16px;border-radius:20px;text-align:center;white-space:nowrap;"></div>
+
+<!-- RIVALRY BAR -->
+<div id="rivalry-bar" style="display:none;position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:85;pointer-events:none;font-family:monospace;font-size:9px;color:#fff;background:rgba(155,89,182,.9);padding:6px 16px;border-radius:20px;white-space:nowrap;letter-spacing:1px;"></div>
+
+<!-- 2 PLAYER BAR -->
+<div id="two-player-bar" style="display:none">
+  <div style="background:linear-gradient(135deg,#3b4cca,#6390F0);font-family:monospace;font-size:9px;color:#fff;text-align:center;padding:6px;letter-spacing:1px">PLAYER 1 PICKS LEFT &nbsp;|&nbsp; PLAYER 2 PICKS RIGHT</div>
+</div>
+
+<!-- HALL OF FAME SCREEN -->
 <div id="hof-screen" class="screen">
-  <div style="text-align:center;margin-bottom:16px">
-    <div style="font-family:'Bangers',Impact,cursive;font-size:clamp(28px,6vw,46px);color:#ffcb05;letter-spacing:3px;text-shadow:3px 3px 0 #e3350d">HALL OF FAME</div>
+  <div style="text-align:center;margin-bottom:16px;padding:16px 14px 0">
+    <div style="font-family:Bangers,Impact,cursive;font-size:clamp(28px,6vw,46px);color:#ffcb05;letter-spacing:3px;text-shadow:3px 3px 0 #e3350d">HALL OF FAME</div>
     <div style="font-family:monospace;font-size:8px;color:#6666aa;margin-top:4px;letter-spacing:1px">PAST CHAMPIONS</div>
   </div>
-  <div id="hof-list"></div>
-  <div style="text-align:center;margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+  <div id="hof-list" style="padding:0 14px"></div>
+  <div style="text-align:center;margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding-bottom:40px">
     <button class="back-btn" onclick="go('home-screen')">HOME</button>
     <button class="back-btn" style="color:#e3350d;border-color:#e3350d" onclick="if(confirm('Clear Hall of Fame?')){localStorage.removeItem('poke_hof_v1');renderHOF();}">CLEAR</button>
-  </div>
-</div>
-
-<!-- POST-TOURNAMENT STATS -->
-<div id="stats-screen" class="screen">
-  <div style="text-align:center;margin-bottom:16px">
-    <div style="font-family:'Bangers',Impact,cursive;font-size:clamp(28px,6vw,46px);color:#ffcb05;letter-spacing:3px;text-shadow:3px 3px 0 #e3350d">TOURNAMENT STATS</div>
-  </div>
-  <div id="stats-list"></div>
-  <div style="text-align:center;margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-    <button class="back-btn" onclick="go('champ-screen')">BACK</button>
-    <button class="back-btn" onclick="go('home-screen')">HOME</button>
   </div>
 </div>
 
@@ -795,53 +601,13 @@ function cleanName(name) {
 var WIN_KEY     = 'poke_wins_v1';
 var RIVALRY_KEY = 'poke_rivals_v1';
 var HOF_KEY     = 'poke_hof_v1';
-var CONF_KEY    = 'poke_conf_v1';
-
-function getWins(){try{return JSON.parse(localStorage.getItem(WIN_KEY)||'{}');}catch(e){return{};}}
-function recordWin(id){try{var w=getWins();w[id]=(w[id]||0)+1;localStorage.setItem(WIN_KEY,JSON.stringify(w));}catch(e){}}
-function getWinCount(id){return getWins()[id]||0;}
-function seedPokes(pokes){return pokes.slice().sort(function(a,b){return getWinCount(b.id)-getWinCount(a.id);});}
-
-function getRivals(){try{return JSON.parse(localStorage.getItem(RIVALRY_KEY)||'{}');}catch(e){return{};}}
-function recordMatchup(wId,lId){
-  try{
-    var r=getRivals();
-    var key=Math.min(wId,lId)+'_'+Math.max(wId,lId);
-    if(!r[key])r[key]={a:wId,b:lId,aWins:0,bWins:0};
-    if(wId===r[key].a)r[key].aWins++;else r[key].bWins++;
-    localStorage.setItem(RIVALRY_KEY,JSON.stringify(r));
-    return r[key];
-  }catch(e){return null;}
+function getWins() {
+  try { return JSON.parse(localStorage.getItem(WIN_KEY)||'{}'); } catch(e) { return {}; }
 }
-function getRivalryText(pA,pB){
-  try{
-    var r=getRivals();
-    var key=Math.min(pA.id,pB.id)+'_'+Math.max(pA.id,pB.id);
-    if(!r[key])return null;
-    var d=r[key],total=d.aWins+d.bWins;
-    if(total<2)return null;
-    var aW=pA.id===d.a?d.aWins:d.bWins,bW=pA.id===d.b?d.aWins:d.bWins;
-    var aN=cleanName(pA.name),bN=cleanName(pB.name);
-    if(aW>bW)return aN+' LEADS THE RIVALRY '+aW+'-'+bW+'!';
-    if(bW>aW)return bN+' LEADS THE RIVALRY '+bW+'-'+aW+'!';
-    return 'ALL TIED! '+aW+'-'+bW+' RIVALRY!';
-  }catch(e){return null;}
+function recordWin(pokeId) {
+  try { var w=getWins(); w[pokeId]=(w[pokeId]||0)+1; localStorage.setItem(WIN_KEY,JSON.stringify(w)); } catch(e) {}
 }
-
-function getHOF(){try{return JSON.parse(localStorage.getItem(HOF_KEY)||'[]');}catch(e){return[];}}
-function recordChampion(poke,mode,rounds){
-  try{
-    var h=getHOF();
-    h.unshift({id:poke.id,name:cleanName(poke.name),types:poke.types.map(function(t){return t.type.name;}),
-      bst:bst(poke.stats),mode:mode,rounds:rounds,date:new Date().toLocaleDateString()});
-    if(h.length>20)h=h.slice(0,20);
-    localStorage.setItem(HOF_KEY,JSON.stringify(h));
-  }catch(e){}
-}
-
-function getConfData(){try{return JSON.parse(localStorage.getItem(CONF_KEY)||'{"picks":0,"correct":0}');}catch(e){return{picks:0,correct:0};}}
-function recordConfidence(correct){try{var d=getConfData();d.picks++;if(correct)d.correct++;localStorage.setItem(CONF_KEY,JSON.stringify(d));}catch(e){}}
-
+function getWinCount(pokeId) { return getWins()[pokeId]||0; }
 // ═══════════════════════════════════════════════════
 //  SMART SEEDING & BYE SYSTEM
 //  Works exactly like March Madness:
@@ -884,6 +650,64 @@ function mkBracketRound(pokes) {
 
   // Build the seeded bracket slots
   // Standard bracket seeding order: 1,16,8,9,5,12,4,13,6,11,3,14,7,10,2,15
+
+// ═══ RIVALRY ═══
+var RIVALRY_KEY='poke_rivals_v1';var HOF_KEY='poke_hof_v1';
+function getRivals(){try{return JSON.parse(localStorage.getItem(RIVALRY_KEY)||'{}');}catch(e){return{};}}
+function recordMatchup(wId,lId){try{var r=getRivals();var key=Math.min(wId,lId)+'_'+Math.max(wId,lId);if(!r[key])r[key]={a:wId,b:lId,aWins:0,bWins:0};if(wId===r[key].a)r[key].aWins++;else r[key].bWins++;localStorage.setItem(RIVALRY_KEY,JSON.stringify(r));}catch(e){}}
+function getRivalryText(pA,pB){try{var r=getRivals();var key=Math.min(pA.id,pB.id)+'_'+Math.max(pA.id,pB.id);if(!r[key])return null;var d=r[key];if(d.aWins+d.bWins<2)return null;var aW=pA.id===d.a?d.aWins:d.bWins,bW=pA.id===d.b?d.aWins:d.bWins;if(aW>bW)return cleanName(pA.name)+' LEADS '+aW+'-'+bW+'!';if(bW>aW)return cleanName(pB.name)+' LEADS '+bW+'-'+aW+'!';return 'TIED '+aW+'-'+bW+'!';}catch(e){return null;}}
+
+// ═══ HALL OF FAME ═══
+function getHOF(){try{return JSON.parse(localStorage.getItem(HOF_KEY)||'[]');}catch(e){return[];}}
+function recordChampion(poke,mode){try{var h=getHOF();h.unshift({id:poke.id,name:cleanName(poke.name),bst:bst(poke.stats),mode:mode,date:new Date().toLocaleDateString()});if(h.length>20)h=h.slice(0,20);localStorage.setItem(HOF_KEY,JSON.stringify(h));}catch(e){}}
+function renderHOF(){
+  var h=getHOF();var el=document.getElementById('hof-list');
+  if(!h.length){el.innerHTML='<div style="text-align:center;font-family:monospace;font-size:10px;color:#444466;padding:40px">NO CHAMPIONS YET!</div>';return;}
+  el.innerHTML='';
+  h.forEach(function(e,i){
+    var d=document.createElement('div');
+    d.style.cssText='display:flex;align-items:center;gap:12px;background:#13132a;border:1px solid #252545;border-radius:12px;padding:10px 14px;margin-bottom:8px;';
+    d.innerHTML='<div style="font-family:Bangers,Impact,cursive;font-size:22px;color:#ffcb05;width:32px;text-align:center">'+(i===0?'&#127942;':i+1)+'</div>'
+      +'<img style="width:48px;height:48px;object-fit:contain;image-rendering:pixelated;flex-shrink:0" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/'+e.id+'.png" alt="">'
+      +'<div style="flex:1;min-width:0"><div style="font-family:monospace;font-size:10px;color:#f0f0ff;text-transform:uppercase">'+e.name+'</div><div style="font-family:monospace;font-size:8px;color:#6666aa;margin-top:3px">'+e.mode.toUpperCase()+' - '+e.date+'</div></div>'
+      +'<div style="font-family:monospace;font-size:9px;color:#ffcb05">'+e.bst+'<br><span style="font-size:7px;color:#444466">BST</span></div>';
+    el.appendChild(d);
+  });
+}
+
+// ═══ HOT STREAK ═══
+var _streak={id:null,count:0};
+function updateStreak(id){if(_streak.id===id)_streak.count++;else _streak={id:id,count:1};}
+function getStreakText(n){if(n>=10)return'&#128293;&#128293;&#128293; '+n+' WIN STREAK!!!';if(n>=7)return'&#128293;&#128293; '+n+' WIN STREAK!!';if(n>=5)return'&#128293; '+n+' STREAK!';if(n>=3)return'&#9889; '+n+' IN A ROW!';return null;}
+
+// ═══ TYPE ADVANTAGE ═══
+var TYPE_CHART={fire:['grass','bug','steel','ice'],water:['fire','ground','rock'],grass:['water','ground','rock'],electric:['water','flying'],ice:['grass','ground','flying','dragon'],fighting:['normal','rock','steel','ice','dark'],poison:['grass','fairy'],ground:['fire','electric','poison','rock','steel'],flying:['grass','fighting','bug'],psychic:['fighting','poison'],bug:['grass','psychic','dark'],rock:['fire','ice','flying','bug'],ghost:['psychic','ghost'],dragon:['dragon'],dark:['psychic','ghost'],steel:['ice','rock','fairy'],fairy:['fighting','dragon','dark']};
+function getTypeAdv(pA,pB){var aT=pA.types.map(function(t){return t.type.name;});var bT=pB.types.map(function(t){return t.type.name;});var aS=false,bS=false;aT.forEach(function(at){if(TYPE_CHART[at])TYPE_CHART[at].forEach(function(bt){if(bT.indexOf(bt)>-1)aS=true;});});bT.forEach(function(bt){if(TYPE_CHART[bt])TYPE_CHART[bt].forEach(function(at){if(aT.indexOf(at)>-1)bS=true;});});if(aS&&!bS)return{name:cleanName(pA.name),type:aT[0]};if(bS&&!aS)return{name:cleanName(pB.name),type:bT[0]};return null;}
+function showTypeAdv(pA,pB){var adv=getTypeAdv(pA,pB);var el=document.getElementById('type-adv-bar');if(!el)return;if(!adv){el.style.display='none';return;}var c=TC[adv.type]||'#ffcb05';el.textContent=(TYPE_EMOJI[adv.type]||'')+' '+adv.name+' HAS TYPE ADVANTAGE!';el.style.background=c+'33';el.style.color=c;el.style.border='1px solid '+c+'88';el.style.display='block';}
+
+// ═══ AUDIO ═══
+var _audioOn=true;var _audioCtx=null;
+function getACtx(){if(!_audioCtx){try{_audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}return _audioCtx;}
+function playTone(freq,type,dur,vol,delay){if(!_audioOn)return;var ctx=getACtx();if(!ctx)return;try{var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type=type||'square';o.frequency.value=freq;g.gain.setValueAtTime(vol||0.08,ctx.currentTime+(delay||0));g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+(delay||0)+dur);o.start(ctx.currentTime+(delay||0));o.stop(ctx.currentTime+(delay||0)+dur+0.05);}catch(e){}}
+function playPickSound(){playTone(523,'square',.08,.08);playTone(659,'square',.08,.08,.1);playTone(784,'square',.15,.08,.2);}
+function playFanfare(){var n=[523,659,784,1047,784,1047,1319];n.forEach(function(f,i){playTone(f,'square',.18,.1,i*.12);});}
+function playUpsetSound(){playTone(400,'square',.05,.1);playTone(600,'square',.05,.1,.16);playTone(800,'square',.2,.12,.25);}
+function toggleAudio(){_audioOn=!_audioOn;var b=document.getElementById('audio-btn');if(b)b.textContent=_audioOn?'SOUND ON':'SOUND OFF';}
+
+// ═══ CONFETTI ═══
+function spawnConfetti(){var cols=['#ffcb05','#e3350d','#3b4cca','#7AC74C','#F95587'];for(var i=0;i<25;i++){(function(idx){setTimeout(function(){var c=document.createElement('div');c.style.cssText='position:fixed;top:-20px;left:'+Math.floor(Math.random()*100)+'%;width:8px;height:8px;background:'+cols[idx%5]+';border-radius:2px;z-index:200;pointer-events:none;animation:confettiDrop '+(1.5+Math.random()*1)+'s ease forwards;';document.body.appendChild(c);setTimeout(function(){if(c.parentNode)c.parentNode.removeChild(c);},3000);},idx*60);})(i);}}
+
+// ═══ 2 PLAYER ═══
+var _twoPlayer=false;var _p1wins=0;var _p2wins=0;
+function toggle2Player(){_twoPlayer=!_twoPlayer;var bar=document.getElementById('two-player-bar');var btn=document.getElementById('two-p-btn');if(_twoPlayer){bar.style.display='block';btn.style.borderColor='#7AC74C';btn.style.color='#7AC74C';btn.textContent='2P ON';}else{bar.style.display='none';btn.style.borderColor='';btn.style.color='';btn.textContent='2P MODE';}}
+
+// ═══ CONFIDENCE ═══
+var _pendingConfSide=null;
+function showConfPicker(side){_pendingConfSide=side;document.getElementById('conf-picker').style.display='flex';}
+function submitConf(level){document.getElementById('conf-picker').style.display='none';if(_pendingConfSide!==null){var s=_pendingConfSide;_pendingConfSide=null;pickWinnerFinal(s);}else{_pendingConfSide=null;}}
+function showConfStats(){alert('Play more battles to unlock confidence stats!');}
+
+
   function buildSeedOrder(size) {
     if (size === 1) return [1];
     var half = size / 2;
@@ -1083,311 +907,6 @@ function validateClash() {
 }
 
 // ═══════════════════════════════════════════════════
-//  FEATURE 1: TYPE ADVANTAGE DETECTION
-// ═══════════════════════════════════════════════════
-var TYPE_CHART = {
-  fire:['grass','bug','steel','ice'],water:['fire','ground','rock'],
-  grass:['water','ground','rock'],electric:['water','flying'],
-  ice:['grass','ground','flying','dragon'],fighting:['normal','rock','steel','ice','dark'],
-  poison:['grass','fairy'],ground:['fire','electric','poison','rock','steel'],
-  flying:['grass','fighting','bug'],psychic:['fighting','poison'],
-  bug:['grass','psychic','dark'],rock:['fire','ice','flying','bug'],
-  ghost:['psychic','ghost'],dragon:['dragon'],dark:['psychic','ghost'],
-  steel:['ice','rock','fairy'],fairy:['fighting','dragon','dark']
-};
-function getTypeAdv(pokA, pokB) {
-  var aTypes = pokA.types.map(function(t){return t.type.name;});
-  var bTypes = pokB.types.map(function(t){return t.type.name;});
-  var aStrong=false, bStrong=false;
-  aTypes.forEach(function(at){if(TYPE_CHART[at])TYPE_CHART[at].forEach(function(bt){if(bTypes.indexOf(bt)>-1)aStrong=true;});});
-  bTypes.forEach(function(bt){if(TYPE_CHART[bt])TYPE_CHART[bt].forEach(function(at){if(aTypes.indexOf(at)>-1)bStrong=true;});});
-  if(aStrong&&!bStrong)return{side:'a',name:cleanName(pokA.name),type:aTypes[0]};
-  if(bStrong&&!aStrong)return{side:'b',name:cleanName(pokB.name),type:bTypes[0]};
-  return null;
-}
-function showTypeAdv(pokA, pokB) {
-  var adv = getTypeAdv(pokA,pokB);
-  var el = document.getElementById('type-adv');
-  if(!adv){el.style.display='none';return;}
-  var c = TC[adv.type]||'#ffcb05';
-  el.textContent = (TYPE_EMOJI[adv.type]||'') + ' ' + adv.name + ' HAS TYPE ADVANTAGE!';
-  el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);'
-    +'z-index:85;pointer-events:none;font-family:monospace;font-size:9px;letter-spacing:1px;'
-    +'padding:6px 16px;border-radius:20px;display:block;text-align:center;white-space:nowrap;'
-    +'background:'+c+'33;color:'+c+';border:1px solid '+c+'88;';
-}
-
-// ═══════════════════════════════════════════════════
-//  FEATURE 2: TYPE FX ANIMATIONS
-// ═══════════════════════════════════════════════════
-var TYPE_FX = {
-  fire:{emoji:'🔥',color:'#EE8130',text:'FIRE!'},
-  water:{emoji:'💧',color:'#6390F0',text:'WATER!'},
-  electric:{emoji:'⚡',color:'#F7D02C',text:'ELECTRIC!'},
-  ice:{emoji:'❄️',color:'#96D9D6',text:'ICE!'},
-  dragon:{emoji:'🐉',color:'#6F35FC',text:'DRAGON!'},
-  psychic:{emoji:'🔮',color:'#F95587',text:'PSYCHIC!'},
-  ghost:{emoji:'👻',color:'#735797',text:'GHOST!'},
-  dark:{emoji:'🌑',color:'#705746',text:'DARK!'},
-  fighting:{emoji:'🥊',color:'#C22E28',text:'FIGHT!'},
-  normal:{emoji:'⚪',color:'#A8A77A',text:''}
-};
-function playTypeIntro(pokA,pokB) {
-  // Animate cards sliding in
-  var fa=document.getElementById('fighter-a'),fb=document.getElementById('fighter-b');
-  fa.style.animation='none'; fb.style.animation='none';
-  void fa.offsetWidth;
-  fa.classList.add('intro-slide-left');
-  fb.classList.add('intro-slide-right');
-  setTimeout(function(){fa.classList.remove('intro-slide-left');fb.classList.remove('intro-slide-right');},500);
-  // Type FX flash if both Pokemon are same type (TYPE clash!)
-  var aType=pokA.types[0]&&pokA.types[0].type.name;
-  var bType=pokB.types[0]&&pokB.types[0].type.name;
-  var fx=TYPE_FX[aType]||TYPE_FX[bType];
-  if(!fx||!fx.text)return;
-  var el=document.getElementById('type-fx');
-  el.textContent=fx.emoji+' '+fx.text+' '+fx.emoji;
-  el.style.color=fx.color;
-  el.style.display='block';
-  el.style.animation='none';void el.offsetWidth;
-  el.style.animation='typeFlash .8s ease forwards';
-  setTimeout(function(){el.style.display='none';},850);
-}
-
-// ═══════════════════════════════════════════════════
-//  FEATURE 3: RIVALRY DISPLAY
-// ═══════════════════════════════════════════════════
-function showRivalry(pokA,pokB) {
-  var text=getRivalryText(pokA,pokB);
-  var el=document.getElementById('rivalry-banner');
-  var txt=document.getElementById('rivalry-text');
-  if(!text){el.style.display='none';return;}
-  txt.textContent='⚔️ '+text;
-  el.style.display='block';
-  setTimeout(function(){el.style.display='none';},3000);
-}
-
-// ═══════════════════════════════════════════════════
-//  FEATURE 4: HOT STREAK TRACKER
-// ═══════════════════════════════════════════════════
-var _streak = {id:null, count:0};
-function updateStreak(winnerId) {
-  if(_streak.id===winnerId){_streak.count++;}
-  else{_streak={id:winnerId,count:1};}
-}
-function getStreakEmoji(n) {
-  if(n>=10)return'🔥🔥🔥 '+n+' WIN STREAK!!!';
-  if(n>=7) return'🔥🔥 '+n+' WIN STREAK!!';
-  if(n>=5) return'🔥 '+n+' WIN STREAK!';
-  if(n>=3) return'⚡ '+n+' IN A ROW!';
-  return null;
-}
-
-// ═══════════════════════════════════════════════════
-//  FEATURE 5: 8-BIT AUDIO
-// ═══════════════════════════════════════════════════
-var _audioCtx=null;var _audioOn=true;
-function getAudioCtx(){
-  if(!_audioCtx){try{_audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}
-  return _audioCtx;
-}
-function playTone(freq,type,duration,vol,delay) {
-  if(!_audioOn)return;
-  var ctx=getAudioCtx();if(!ctx)return;
-  try{
-    var osc=ctx.createOscillator(),gain=ctx.createGain();
-    osc.connect(gain);gain.connect(ctx.destination);
-    osc.type=type||'square';osc.frequency.value=freq;
-    gain.gain.setValueAtTime(vol||0.08,ctx.currentTime+(delay||0));
-    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+(delay||0)+duration);
-    osc.start(ctx.currentTime+(delay||0));
-    osc.stop(ctx.currentTime+(delay||0)+duration+0.05);
-  }catch(e){}
-}
-function playPickSound(isWin) {
-  if(isWin){
-    // Victory fanfare — escalates for finals
-    var rlen=(T.bracket[T.round]||[]).length;
-    if(rlen===1){playFanfare();}
-    else{playTone(523,.square,.08,.08);playTone(659,.square,.08,.08,.1);playTone(784,.square,.15,.08,.2);}
-  } else {
-    playTone(200,'sawtooth',.15,.05);
-  }
-}
-function playFanfare() {
-  var notes=[523,659,784,1047,784,1047,1319];
-  notes.forEach(function(n,i){playTone(n,'square',.18,.1,i*.12);});
-}
-function playUpsetSound() {
-  playTone(400,'square',.05,.1);playTone(500,'square',.05,.1,.08);
-  playTone(600,'square',.05,.1,.16);playTone(800,'square',.2,.12,.25);
-}
-function playIntroSound(rlen) {
-  // More dramatic for later rounds
-  if(rlen===1){playTone(200,'sawtooth',.3,.06);playTone(150,'sawtooth',.3,.06,.15);}
-  else if(rlen<=2){playTone(300,'square',.1,.05);playTone(400,'square',.1,.05,.1);}
-  else{playTone(400,'square',.08,.04);}
-}
-function toggleAudio() {
-  _audioOn=!_audioOn;
-  var btn=document.getElementById('audio-btn');
-  if(btn)btn.textContent=_audioOn?'SOUND ON':'SOUND OFF';
-}
-
-// ═══════════════════════════════════════════════════
-//  FEATURE 6: UPSET DETECTOR
-// ═══════════════════════════════════════════════════
-function checkUpset(winner,loser,winnerSeed,loserSeed) {
-  // Upset = lower seed (higher number) beat higher seed (lower number)
-  if(loserSeed && winnerSeed && winnerSeed > loserSeed+3) {
-    showUpset();
-    playUpsetSound();
-  }
-}
-function showUpset() {
-  var el=document.getElementById('upset-banner');
-  el.style.display='flex';
-  setTimeout(function(){
-    el.style.display='none';
-    spawnConfetti();
-  },1200);
-}
-function spawnConfetti() {
-  var colors=['#ffcb05','#e3350d','#3b4cca','#7AC74C','#F95587','#EE8130'];
-  for(var i=0;i<30;i++){
-    (function(idx){
-      setTimeout(function(){
-        var c=document.createElement('div');
-        c.style.cssText='position:fixed;top:-20px;left:'+Math.random()*100+'vw;'
-          +'width:'+(6+Math.random()*8)+'px;height:'+(6+Math.random()*8)+'px;'
-          +'background:'+colors[Math.floor(Math.random()*colors.length)]+';'
-          +'border-radius:2px;z-index:200;pointer-events:none;'
-          +'animation:confettiDrop '+(1.5+Math.random())+'s ease forwards;';
-        document.body.appendChild(c);
-        setTimeout(function(){c.parentNode&&c.parentNode.removeChild(c);},3000);
-      },idx*50);
-    })(i);
-  }
-}
-
-// ═══════════════════════════════════════════════════
-//  FEATURE 7: CONFIDENCE PICKER
-// ═══════════════════════════════════════════════════
-var _pendingConf={side:null,confident:null};var _waitingConf=false;
-function showConfPicker(side) {
-  // Show confidence picker before confirming the pick
-  _pendingConf={side:side,confident:null};
-  _waitingConf=true;
-  var el=document.getElementById('conf-picker');
-  el.style.display='flex';
-}
-function submitConf(level) {
-  if(!_waitingConf)return;
-  _waitingConf=false;
-  _pendingConf.confident=level;
-  document.getElementById('conf-picker').style.display='none';
-  // Now execute the actual pick
-  pickWinnerConfirmed(_pendingConf.side,level);
-}
-function showConfStats() {
-  var d=getConfData();
-  var pct=d.picks>0?Math.round(d.correct/d.picks*100):0;
-  alert('CONFIDENCE STATS
-
-Total picks: '+d.picks+'
-You were right: '+d.correct+'
-Accuracy: '+pct+'%
-
-'+(pct>=70?'AMAZING INSTINCTS!':pct>=50?'PRETTY GOOD!':'KEEP PRACTICING!'));
-}
-
-// ═══════════════════════════════════════════════════
-//  FEATURE 8: TWO PLAYER MODE
-// ═══════════════════════════════════════════════════
-var _twoPlayer=false;var _p1wins=0;var _p2wins=0;
-function toggle2Player() {
-  _twoPlayer=!_twoPlayer;
-  var bar=document.getElementById('two-player-bar');
-  var btn=document.getElementById('two-p-btn');
-  if(_twoPlayer){
-    bar.style.display='block';
-    btn.style.borderColor='#7AC74C';btn.style.color='#7AC74C';
-    btn.textContent='2P: ON';
-    // Apply player colors to cards
-    document.getElementById('fighter-a').classList.add('p1-indicator');
-    document.getElementById('fighter-b').classList.add('p2-indicator');
-  }else{
-    bar.style.display='none';
-    btn.style.borderColor='';btn.style.color='';btn.textContent='2P MODE';
-    document.getElementById('fighter-a').classList.remove('p1-indicator','p2-indicator');
-    document.getElementById('fighter-b').classList.remove('p1-indicator','p2-indicator');
-  }
-}
-
-// ═══════════════════════════════════════════════════
-//  FEATURE 9: HALL OF FAME RENDERER
-// ═══════════════════════════════════════════════════
-function renderHOF() {
-  var hof=getHOF();
-  var el=document.getElementById('hof-list');
-  if(!hof.length){el.innerHTML='<div style="text-align:center;font-family:monospace;font-size:10px;color:#444466;padding:40px">NO CHAMPIONS YET!<br>WIN A TOURNAMENT FIRST!</div>';return;}
-  el.innerHTML='';
-  hof.forEach(function(h,i){
-    var c=TC[h.types&&h.types[0]]||'#ffcb05';
-    var div=document.createElement('div');
-    div.className='hof-entry';
-    div.style.animationDelay=(i*0.05)+'s';
-    div.innerHTML='<div class="hof-rank">'+(i===0?'&#127942;':i+1)+'</div>'
-      +'<img class="hof-img" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/'+h.id+'.png" alt="'+h.name+'">'
-      +'<div class="hof-info">'
-      +'<div class="hof-name">'+h.name+'</div>'
-      +'<div class="hof-meta">'+h.mode.toUpperCase()+' · '+h.date+'</div>'
-      +'</div>'
-      +'<div class="hof-bst">'+h.bst+'<br><span style="font-size:7px;color:#444466">BST</span></div>';
-    el.appendChild(div);
-  });
-}
-
-// ═══════════════════════════════════════════════════
-//  FEATURE 10: POST-TOURNAMENT STATS
-// ═══════════════════════════════════════════════════
-var _tourneyStats={matches:[],startTime:null};
-function startTourneyStats(){_tourneyStats={matches:[],startTime:Date.now()};}
-function recordMatchStat(winner,loser,wSeed,lSeed){
-  _tourneyStats.matches.push({wId:winner.id,wName:cleanName(winner.name),wBst:bst(winner.stats),
-    lId:loser.id,lName:cleanName(loser.name),lBst:bst(loser.stats),
-    wSeed:wSeed,lSeed:lSeed,upset:lSeed&&wSeed&&wSeed>lSeed+3});
-}
-function showTourneyStats(champ) {
-  var ms=_tourneyStats.matches;
-  var el=document.getElementById('stats-list');
-  if(!ms.length){el.innerHTML='<div style="text-align:center;color:#444466;font-family:monospace;padding:20px">NO DATA YET</div>';return;}
-  // Find biggest upset (winner seed - loser seed)
-  var biggestUpset=null,maxDiff=0;
-  ms.forEach(function(m){if(m.upset&&(m.lSeed-m.wSeed)>maxDiff){maxDiff=m.lSeed-m.wSeed;biggestUpset=m;}});
-  // Find most dominant win (biggest BST gap)
-  var dominant=ms.reduce(function(best,m){return(m.wBst-m.lBst)>(best?best.wBst-best.lBst:-999)?m:best;},null);
-  // Duration
-  var mins=Math.round((Date.now()-_tourneyStats.startTime)/60000);
-  el.innerHTML='';
-  var stats=[
-    {title:'TOTAL BATTLES',val:ms.length,sub:'matches played'},
-    {title:'CHAMPION BST',val:bst(champ.stats),sub:cleanName(champ.name)},
-    {title:'TOURNAMENT TIME',val:mins+'m',sub:'minutes to crown a winner'},
-    biggestUpset?{title:'BIGGEST UPSET',val:'SEED '+biggestUpset.wSeed,sub:biggestUpset.wName+' beat seed '+biggestUpset.lSeed}:null,
-    dominant?{title:'MOST DOMINANT',val:'+'+((dominant.wBst-dominant.lBst)),sub:dominant.wName+' ('+dominant.wBst+' vs '+dominant.lBst+' BST)'}:null,
-  ].filter(Boolean);
-  stats.forEach(function(s,i){
-    var div=document.createElement('div');div.className='stat-card';
-    div.style.animationDelay=(i*.08)+'s';
-    div.innerHTML='<div class="stat-card-title">'+s.title+'</div>'
-      +'<div class="stat-card-val">'+s.val+'</div>'
-      +'<div class="stat-card-sub">'+s.sub+'</div>';
-    el.appendChild(div);
-  });
-}
-
-// ═══════════════════════════════════════════════════
 //  INIT FILTERS
 // ═══════════════════════════════════════════════════
 function initFilters() {
@@ -1494,9 +1013,6 @@ function startTournament(pokes, mode) {
 
   var r1 = mkBracketRound(seeded);
   T = {bracket:[r1],round:0,match:0,mode:mode};
-  startTourneyStats();
-  _streak = {id:null,count:0};
-  _p1wins=0;_p2wins=0;
   _prevState=null; _canUndo=false;
   var m=0;
   while(m<r1.length&&(r1[m].winner!==null||!r1[m].a||!r1[m].b)) m++;
@@ -1516,22 +1032,16 @@ function renderCurrentBattle() {
   var fa=document.getElementById('fighter-a'), fb=document.getElementById('fighter-b');
   renderCard(fa,match.a); renderCard(fb,match.b);
   fa.onclick=function(){pickWinner('a');}; fb.onclick=function(){pickWinner('b');};
-
-  // 2P mode colors
-  if(_twoPlayer){fa.classList.add('p1-indicator');fb.classList.add('p2-indicator');}
-  else{fa.classList.remove('p1-indicator','p2-indicator');fb.classList.remove('p1-indicator','p2-indicator');}
-
-  // Show type advantage
-  showTypeAdv(match.a, match.b);
-  // Show rivalry history
-  showRivalry(match.a, match.b);
-  // Play intro FX
-  setTimeout(function(){
-    playTypeIntro(match.a, match.b);
-    playIntroSound(rlen);
-  },50);
-
   updateUndoBtn();
+  // Type advantage
+  showTypeAdv(match.a, match.b);
+  // Rivalry badge
+  var riv=getRivalryText(match.a,match.b);
+  var rivEl=document.getElementById('rivalry-bar');
+  if(rivEl){rivEl.textContent=riv?('RIVALRY: '+riv):'';rivEl.style.display=riv?'block':'none';}
+  // 2P colors
+  if(_twoPlayer){fa.style.borderColor='#F7D02C';fb.style.borderColor='#EE8130';}
+  else{fa.style.borderColor='';fb.style.borderColor='';}
 }
 
 function updateUndoBtn() {
@@ -1548,38 +1058,25 @@ function updateUndoBtn() {
 function pickWinner(side) {
   var match=T.bracket[T.round][T.match];
   if(!match||match.winner)return;
-  // Show confidence picker first (skip in 2P mode)
-  if(!_twoPlayer){showConfPicker(side);return;}
-  pickWinnerConfirmed(side,null);
+  showConfPicker(side);
 }
 
-function pickWinnerConfirmed(side,confLevel) {
+function pickWinnerFinal(side) {
   var match=T.bracket[T.round][T.match];
   if(!match||match.winner)return;
   var fa=document.getElementById('fighter-a'),fb=document.getElementById('fighter-b');
   fa.onclick=null;fb.onclick=null;
   fa.classList.add('locked');fb.classList.add('locked');
   _prevState={bracket:JSON.parse(JSON.stringify(T.bracket)),round:T.round,match:T.match};
-  _canUndo=true;updateUndoBtn();
-  triggerFlash();
+  _canUndo=true;updateUndoBtn();triggerFlash();playPickSound();
   var winner=side==='a'?match.a:match.b;
   var loser=side==='a'?match.b:match.a;
-  recordWin(winner.id);
-  recordMatchup(winner.id,loser.id);
-  updateStreak(winner.id);
-  recordMatchStat(winner,loser,0,0);
+  recordWin(winner.id);recordMatchup(winner.id,loser.id);updateStreak(winner.id);
   if(_twoPlayer){if(side==='a')_p1wins++;else _p2wins++;}
   fa.classList.add(side==='a'?'winner':'loser');
   fb.classList.add(side==='b'?'winner':'loser');
-  // Hot streak badge
-  var streakText=getStreakEmoji(_streak.count);
-  if(streakText&&_streak.id===winner.id){
-    var badge=document.createElement('div');badge.className='streak-badge';
-    badge.textContent=streakText;
-    badge.style.background=_streak.count>=7?'#e3350d':_streak.count>=5?'#EE8130':'#3b4cca';
-    (side==='a'?fa:fb).appendChild(badge);
-  }
-  playPickSound(true);
+  var st=getStreakText(_streak.count);
+  if(st&&_streak.id===winner.id){var badge=document.createElement('div');badge.textContent=st;badge.style.cssText='position:absolute;top:8px;left:8px;font-family:monospace;font-size:8px;font-weight:bold;color:#fff;padding:3px 8px;border-radius:20px;background:#e3350d;z-index:3;';(side==='a'?fa:fb).appendChild(badge);}
   setTimeout(function(){
     T.bracket[T.round][T.match].winner=winner;
     var round=T.bracket[T.round];
@@ -1593,26 +1090,21 @@ function pickWinnerConfirmed(side,confLevel) {
       return;
     }
     var seenW={};
-    var winners=round.map(function(m){return m.winner;}).filter(function(w){
-      if(!w||seenW[w.id])return false;seenW[w.id]=true;return true;
-    });
+    var winners=round.map(function(m){return m.winner;}).filter(function(w){if(!w||seenW[w.id])return false;seenW[w.id]=true;return true;});
     if(winners.length===1){showChampion(winners[0]);return;}
     var nextRound=mkBracketRound(seedPokes(winners));
     T.bracket.push(nextRound);T.round++;
     _prevState=null;_canUndo=false;updateUndoBtn();
-    var nm=0;
-    while(nm<nextRound.length&&(nextRound[nm].winner!==null||!nextRound[nm].a||!nextRound[nm].b))nm++;
+    var nm=0;while(nm<nextRound.length&&(nextRound[nm].winner!==null||!nextRound[nm].a||!nextRound[nm].b))nm++;
     T.match=nm;
     var rl=nextRound.filter(function(m){return m.a&&m.b;}).length;
     var label=rl===1?'GRAND FINAL!':rl===2?'SEMI-FINALS':rl===4?'QUARTER-FINALS':'NEXT ROUND';
     document.getElementById('trans-label').textContent=label;
     document.getElementById('round-transition').classList.add('visible');
-    setTimeout(function(){
-      document.getElementById('round-transition').classList.remove('visible');
-      renderCurrentBattle();
-    },1500);
+    setTimeout(function(){document.getElementById('round-transition').classList.remove('visible');renderCurrentBattle();},1500);
   },850);
 }
+
 
 function handleUndo() {
   if (!_prevState) return;
@@ -1622,84 +1114,10 @@ function handleUndo() {
   renderCurrentBattle();
 }
 
-// ─── ROUND-BY-ROUND BRACKET ───────────────────────
-var _bracketViewRound = 0;
-var _bracketFromChamp = false;
-
 function viewBracket() {
-  _bracketFromChamp = false;
-  _bracketViewRound = T.round; // start on current round
-  renderRoundView();
+  renderBracketView();
   document.getElementById('bracket-back').onclick=function(){go('battle-screen');};
   go('bracket-screen');
-}
-
-function renderRoundView() {
-  var el=document.getElementById('bracket-inner');
-  el.innerHTML='';
-  var totalRounds = T.bracket.length;
-  var round = T.bracket[_bracketViewRound];
-  if(!round){return;}
-
-  // Navigation header
-  var rlen=round.length;
-  var rname=rlen===1?'GRAND FINAL':rlen===2?'SEMI-FINALS':rlen===4?'QUARTER-FINALS':rlen<=8?'ROUND OF '+(rlen*2):'ROUND '+(_bracketViewRound+1);
-
-  var nav=document.createElement('div');nav.className='bracket-round-nav';
-  var prevBtn=document.createElement('button');prevBtn.className='bracket-nav-btn';
-  prevBtn.textContent='← PREV';prevBtn.disabled=_bracketViewRound<=0;
-  prevBtn.onclick=function(){if(_bracketViewRound>0){_bracketViewRound--;renderRoundView();}};
-
-  var title=document.createElement('div');title.className='bracket-round-title';
-  title.textContent=rname;
-
-  var nextBtn=document.createElement('button');nextBtn.className='bracket-nav-btn';
-  nextBtn.textContent='NEXT →';nextBtn.disabled=_bracketViewRound>=totalRounds-1;
-  nextBtn.onclick=function(){if(_bracketViewRound<totalRounds-1){_bracketViewRound++;renderRoundView();}};
-
-  var roundLabel=document.createElement('div');
-  roundLabel.style.cssText='font-family:monospace;font-size:8px;color:#6666aa;text-align:center;margin-bottom:8px;letter-spacing:1px;';
-  roundLabel.textContent='ROUND '+(_bracketViewRound+1)+' OF '+totalRounds;
-
-  nav.appendChild(prevBtn);nav.appendChild(title);nav.appendChild(nextBtn);
-  el.appendChild(roundLabel);el.appendChild(nav);
-
-  // List all matchups in this round
-  var realMatches=round.filter(function(m){return m.a&&m.b;});
-  var byeMatches=round.filter(function(m){return m.isBye||(!m.a||!m.b)&&(m.a||m.b);});
-
-  realMatches.forEach(function(match,i){
-    var div=document.createElement('div');div.className='bracket-matchup';
-    if(!match.winner)div.style.border='2px solid #3b4cca44'; // current battles highlighted
-
-    function makeSlot(poke,isWinner,isLoser){
-      var slot=document.createElement('div');slot.className='bracket-slot';
-      if(isWinner)slot.classList.add('winner-slot');
-      if(isLoser)slot.classList.add('loser-slot');
-      var wins=getWinCount(poke.id);
-      var winsStr=wins>0?(' '+wins+'W'):'';
-      slot.innerHTML='<img class="b-slot-img" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/'+(poke.id<10000?poke.id:poke.id)+'.png" alt="'+poke.name+'">'
-        +'<span class="b-slot-name">'+cleanName(poke.name)+'</span>'
-        +(winsStr?('<span class="b-slot-wins">'+winsStr+'</span>'):'')
-        +(isWinner?'<span style="font-size:14px;flex-shrink:0">⭐</span>':'');
-      return slot;
-    }
-
-    var aWon=match.winner&&match.winner.id===match.a.id;
-    var bWon=match.winner&&match.winner.id===match.b.id;
-    div.appendChild(makeSlot(match.a,aWon,bWon));
-    var vs=document.createElement('div');vs.className='bracket-vs';vs.textContent='VS';div.appendChild(vs);
-    div.appendChild(makeSlot(match.b,bWon,aWon));
-    el.appendChild(div);
-  });
-
-  if(byeMatches.length>0){
-    var byeDiv=document.createElement('div');
-    byeDiv.style.cssText='font-family:monospace;font-size:8px;color:#444466;text-align:center;margin-top:10px;';
-    byeDiv.textContent=byeMatches.length+' BYE'+(byeMatches.length>1?'S':'')
-      +' — TOP SEEDS AUTO-ADVANCED';
-    el.appendChild(byeDiv);
-  }
 }
 
 function renderBracketView() {
