@@ -702,7 +702,18 @@ function spawnConfetti(){var cols=['#ffcb05','#e3350d','#3b4cca','#7AC74C','#F95
 
 // ═══ 2 PLAYER ═══
 var _twoPlayer=false;var _p1wins=0;var _p2wins=0;
-function toggle2Player(){_twoPlayer=!_twoPlayer;var bar=document.getElementById('two-player-bar');var btn=document.getElementById('two-p-btn');if(_twoPlayer){bar.style.display='block';btn.style.borderColor='#7AC74C';btn.style.color='#7AC74C';btn.textContent='2P ON';}else{bar.style.display='none';btn.style.borderColor='';btn.style.color='';btn.textContent='2P MODE';}}
+function toggle2Player(){
+  _twoPlayer=!_twoPlayer;
+  var bar=document.getElementById('two-player-bar');
+  var btn=document.getElementById('two-p-btn');
+  if(_twoPlayer){
+    if(bar)bar.style.display='block';
+    if(btn){btn.style.borderColor='#7AC74C';btn.style.color='#7AC74C';btn.textContent='2P ON';}
+  }else{
+    if(bar)bar.style.display='none';
+    if(btn){btn.style.borderColor='';btn.style.color='';btn.textContent='2P MODE';}
+  }
+}
 
 // ═══ CONFIDENCE ═══
 var _pendingConfSide=null;
@@ -1122,13 +1133,16 @@ function handleUndo() {
 }
 
 function viewBracket() {
+  var backEl=document.getElementById('bracket-back');
+  if(backEl)backEl.onclick=function(){go('battle-screen');};
   renderBracketView();
-  document.getElementById('bracket-back').onclick=function(){go('battle-screen');};
   go('bracket-screen');
 }
 
 function renderBracketView() {
-  var el=document.getElementById('bracket-inner'); el.innerHTML='';
+  var el=document.getElementById('bracket-inner');
+  if(!el)return;
+  el.innerHTML='';
   var last=T.bracket[T.bracket.length-1];
   var champ=last&&last.length===1&&last[0].winner?last[0].winner:null;
   T.bracket.forEach(function(round,ri) {
