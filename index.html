@@ -252,7 +252,7 @@ header{text-align:center;padding:20px 16px 8px;position:relative;z-index:2;}
 .poke-card.loser{opacity:.22;filter:grayscale(1);cursor:default;pointer-events:none;}
 .poke-card.locked{pointer-events:none;}
 .poke-card.p1-card{border-color:#F7D02C !important;}
-.poke-card.p2-card{border-color:#EE8130 !important;}
+.poke-card.p2-card{border-color:#7AC74C !important;}
 
 /* ── Card contents ── */
 .poke-img-wrap{width:clamp(120px,36vw,170px);height:clamp(120px,36vw,170px);
@@ -352,6 +352,23 @@ header{text-align:center;padding:20px 16px 8px;position:relative;z-index:2;}
 .hof-name{font-family:monospace;font-size:9px;color:#f0f0ff;text-transform:uppercase;letter-spacing:1px;}
 .hof-meta{font-family:monospace;font-size:7px;color:#6666aa;margin-top:2px;}
 .hof-bst{font-family:monospace;font-size:8px;color:#ffcb05;flex-shrink:0;text-align:right;}
+
+/* ── 2 Player Mode ── */
+.two-p-bar{display:none;padding:6px 12px;background:rgba(11,11,24,.95);
+  border-bottom:2px solid #252545;text-align:center;}
+.two-p-scores{display:flex;align-items:center;justify-content:center;gap:16px;}
+.two-p-name{font-family:'Bangers',Impact,cursive;font-size:22px;letter-spacing:2px;}
+.two-p-pts{font-family:monospace;font-size:10px;letter-spacing:1px;}
+.two-p-sep{font-family:'Bangers',Impact,cursive;font-size:18px;color:#444;}
+.two-p-turn{font-family:monospace;font-size:8px;letter-spacing:2px;
+  margin-top:3px;color:#9999bb;}
+.p1-card{border-color:#6390F0 !important;}
+.p2-card{border-color:#7AC74C !important;}
+.final-card{border-color:#ffcb05 !important;
+  box-shadow:0 0 30px rgba(255,203,5,.4) !important;}
+.two-p-final-banner{font-family:'Bangers',Impact,cursive;
+  font-size:clamp(20px,5vw,32px);color:#ffcb05;letter-spacing:3px;
+  text-shadow:3px 3px 0 #e3350d;text-align:center;padding:8px 0;}
 
 /* ── Stats screen ── */
 #stats-screen{padding:16px 14px 50px;}
@@ -456,7 +473,7 @@ header{text-align:center;padding:20px 16px 8px;position:relative;z-index:2;}
 <!-- ══════════════════════════════════ MINI SETUP ══════════════════════════════════ -->
 <div id="miniSetup" class="screen">
   <div class="setup-wrap">
-    <div class="setup-title" style="color:#EE8130">MINI TOURNAMENT</div>
+    <div class="setup-title" style="color:#7AC74C">MINI TOURNAMENT</div>
     <div class="filter-label">SIZE</div>
     <div class="size-row" id="mini-sizes"></div>
     <div class="filter-label">GENERATIONS</div>
@@ -518,6 +535,21 @@ header{text-align:center;padding:20px 16px 8px;position:relative;z-index:2;}
 </div>
 
 <!-- ══════════════════════════════════ BATTLE ══════════════════════════════════ -->
+<!-- 2P score bar — shown above battle when 2P active -->
+<div id="two-p-bar" class="two-p-bar">
+  <div class="two-p-scores">
+    <div>
+      <span class="two-p-name" style="color:#6390F0" id="two-p-p1-name">PLAYER 1</span>
+      <span class="two-p-pts" style="color:#6390F0"> &nbsp;<span id="two-p-p1-pts">0</span> pts</span>
+    </div>
+    <div class="two-p-sep">|</div>
+    <div>
+      <span class="two-p-name" style="color:#7AC74C" id="two-p-p2-name">PLAYER 2</span>
+      <span class="two-p-pts" style="color:#7AC74C"> &nbsp;<span id="two-p-p2-pts">0</span> pts</span>
+    </div>
+  </div>
+  <div class="two-p-turn" id="two-p-turn">PLAYER 1'S TURN</div>
+</div>
 <div id="battle-screen" class="screen">
   <div class="round-banner">
     <div class="round-name" id="round-name">QUARTER-FINALS</div>
@@ -618,7 +650,7 @@ var TYPE_EMOJI = {
   steel:'&#9881;',fairy:'&#10024;'
 };
 var TC = {
-  normal:'#A8A77A',fire:'#EE8130',water:'#6390F0',electric:'#F7D02C',
+  normal:'#A8A77A',fire:'#7AC74C',water:'#6390F0',electric:'#F7D02C',
   grass:'#7AC74C',ice:'#96D9D6',fighting:'#C22E28',poison:'#A33EA1',
   ground:'#E2BF65',flying:'#A98FF3',psychic:'#F95587',bug:'#A6B91A',
   rock:'#B6A136',ghost:'#735797',dragon:'#6F35FC',dark:'#705746',
@@ -993,8 +1025,18 @@ var _prevState  = null;
 var _canUndo    = false;
 var _replayFn   = null;
 var _twoPlayer  = false;
-var _p1wins     = 0;
+var _p1wins     = 0;   // points scored (won their side's match)
 var _p2wins     = 0;
+var _p1name     = 'PLAYER 1';
+var _p2name     = 'PLAYER 2';
+// 2P bracket split:
+// Left half of bracket = P1, Right half = P2
+// Alternating turns: P1 picks odd left matches, P2 picks odd right matches
+// _twoPturn = 'p1' or 'p2' — whose turn it currently is
+var _twoPturn   = 'p1';
+// Track which "conference" current match belongs to
+// P1 owns matches in left half of bracket, P2 owns right half
+// In Grand Final both players pick — whoever wins scores
 var _streak     = {id:null, count:0};
 var _tourneyStartTime = 0;
 var _tourneyMatches   = 0;
@@ -1211,7 +1253,8 @@ function startTournament(pokes, mode) {
   var r1 = mkBracketRound(seeded);
   T = {bracket:[r1], round:0, match:0, mode:mode};
   _prevState = null; _canUndo = false;
-  _twoPlayer = false; _p1wins = 0; _p2wins = 0;
+  _p1wins = 0; _p2wins = 0; _twoPturn = 'p1';
+  if (_twoPlayer) { update2PBar(); } else { hide2PBar(); }
   _streak = {id:null, count:0};
   _tourneyStartTime = Date.now();
   _tourneyMatches = 0; _tourneyUpsets = 0;
@@ -1246,8 +1289,22 @@ function renderCurrentBattle() {
   renderCard(fb, match.b);
   fa.onclick = function() { pickWinner('a'); };
   fb.onclick = function() { pickWinner('b'); };
-  // 2P colors
-  if (_twoPlayer) { fa.classList.add('p1-card'); fb.classList.add('p2-card'); }
+  // 2P colors and context
+  if (_twoPlayer) {
+    var owner = get2POwner(T.match, round.length);
+    var isFinal = round.length === 1;
+    if (isFinal) {
+      fa.classList.add('final-card'); fb.classList.add('final-card');
+      // Show grand final banner
+      var hint = document.getElementById('battle-hint');
+      if (hint) hint.innerHTML = '<span class="two-p-final-banner">&#127942; GRAND FINAL! &#127942;</span>';
+    } else if (owner === 'p1') {
+      fa.classList.add('p1-card'); fb.classList.add('p1-card');
+    } else {
+      fa.classList.add('p2-card'); fb.classList.add('p2-card');
+    }
+    update2PBar();
+  }
   // Type advantage
   showTypeAdv(match.a, match.b);
   // Rivalry hint
@@ -1291,7 +1348,7 @@ function pickWinner(side) {
     badge.className = 'streak-badge';
     var n = _streak.count;
     badge.textContent = n>=10 ? ('&#128293;&#128293;&#128293; '+n+' STREAK!!!') : n>=7 ? ('&#128293;&#128293; '+n+' STREAK!!') : n>=5 ? ('&#128293; '+n+' STREAK!') : ('&#9889; '+n+' IN A ROW!');
-    badge.style.background = n>=7 ? '#e3350d' : n>=5 ? '#EE8130' : '#3b4cca';
+    badge.style.background = n>=7 ? '#e3350d' : n>=5 ? '#7AC74C' : '#3b4cca';
     badge.style.color = '#fff';
     (side==='a' ? fa : fb).appendChild(badge);
   }
@@ -1320,6 +1377,26 @@ function pickWinner(side) {
     while (next < round.length && (round[next].winner !== null || !round[next].a || !round[next].b)) next++;
     if (next < round.length) {
       T.match = next;
+      // In 2P mode: check if we need to score and whose turn next
+      if (_twoPlayer) {
+        var rlen = round.length;
+        var isFinal = rlen === 1;
+        if (!isFinal) {
+          var prevOwner = get2POwner(T.match - 1 >= 0 ? T.match - 1 : 0, rlen);
+          // Did the right player pick? Score them
+          // We already recorded the pick — now check conference
+          var winnerMatchIdx = T.match - 1;
+          if (winnerMatchIdx < 0) winnerMatchIdx = 0;
+          // Score: if owner picked winner (always true since they picked), 
+          // give them a point for advancing their side
+          var pointOwner = get2POwner(winnerMatchIdx, rlen);
+          if (pointOwner === 'p1') _p1wins++;
+          else _p2wins++;
+        } else {
+          // Grand final — alternate who picks
+          _twoPturn = _twoPturn === 'p1' ? 'p2' : 'p1';
+        }
+      }
       // Fade cards between matches
       fa.style.transition = 'opacity .2s'; fb.style.transition = 'opacity .2s';
       fa.style.opacity = '0'; fb.style.opacity = '0';
@@ -1369,7 +1446,7 @@ function showUpset() {
   }, 1000);
 }
 function spawnConfetti() {
-  var cols = ['#ffcb05','#e3350d','#3b4cca','#7AC74C','#F95587','#EE8130'];
+  var cols = ['#ffcb05','#e3350d','#3b4cca','#7AC74C','#F95587','#7AC74C'];
   for (var i = 0; i < 28; i++) {
     (function(idx) {
       setTimeout(function() {
@@ -1385,21 +1462,68 @@ function spawnConfetti() {
   }
 }
 function toggle2Player() {
-  _twoPlayer = !_twoPlayer;
+  if (!_twoPlayer) {
+    // Prompt for player names
+    var n1 = prompt('Player 1 name:', 'PLAYER 1');
+    if (!n1) return;
+    var n2 = prompt('Player 2 name:', 'PLAYER 2');
+    if (!n2) return;
+    _p1name = n1.toUpperCase().slice(0,12);
+    _p2name = n2.toUpperCase().slice(0,12);
+    _twoPlayer = true;
+    _p1wins = 0; _p2wins = 0;
+    _twoPturn = 'p1';
+    update2PBar();
+  } else {
+    _twoPlayer = false;
+    hide2PBar();
+  }
   var btn = document.getElementById('two-p-btn');
   if (btn) {
     btn.textContent = _twoPlayer ? '2P: ON' : '2P MODE';
     btn.style.borderColor = _twoPlayer ? '#7AC74C' : '';
     btn.style.color = _twoPlayer ? '#7AC74C' : '';
   }
-  var banner = document.getElementById('two-player-banner');
-  if (banner) banner.style.display = _twoPlayer ? 'block' : 'none';
-  var fa = document.getElementById('fighter-a');
-  var fb = document.getElementById('fighter-b');
-  if (fa && fb) {
-    if (_twoPlayer) { fa.classList.add('p1-card'); fb.classList.add('p2-card'); }
-    else { fa.classList.remove('p1-card','p2-card'); fb.classList.remove('p1-card','p2-card'); }
+  renderCurrentBattle();
+}
+
+function get2POwner(matchIdx, roundLen) {
+  // Left half of bracket = P1, Right half = P2
+  // Grand Final (roundLen === 1) = both players, alternating pick
+  if (roundLen === 1) return _twoPturn; // grand final — whoever's turn
+  var halfSize = Math.floor(roundLen / 2);
+  return matchIdx < halfSize ? 'p1' : 'p2';
+}
+
+function update2PBar() {
+  var bar = document.getElementById('two-p-bar');
+  if (!bar) return;
+  if (!_twoPlayer) { bar.style.display='none'; return; }
+  bar.style.display = 'block';
+  var p1el = document.getElementById('two-p-p1-name');
+  var p2el = document.getElementById('two-p-p2-name');
+  var p1pts = document.getElementById('two-p-p1-pts');
+  var p2pts = document.getElementById('two-p-p2-pts');
+  var turnEl = document.getElementById('two-p-turn');
+  if (p1el) p1el.textContent = _p1name;
+  if (p2el) p2el.textContent = _p2name;
+  if (p1pts) p1pts.textContent = _p1wins;
+  if (p2pts) p2pts.textContent = _p2wins;
+  var round = T.bracket[T.round];
+  var match = round ? round[T.match] : null;
+  var rlen = round ? round.length : 2;
+  var owner = match ? get2POwner(T.match, rlen) : _twoPturn;
+  var ownerName = owner === 'p1' ? _p1name : _p2name;
+  var ownerColor = owner === 'p1' ? '#6390F0' : '#7AC74C';
+  if (turnEl) {
+    turnEl.textContent = rlen===1 ? 'GRAND FINAL - ' + ownerName + ' PICKS FIRST!' : ownerName + "'S TURN";
+    turnEl.style.color = ownerColor;
   }
+}
+
+function hide2PBar() {
+  var bar = document.getElementById('two-p-bar');
+  if (bar) bar.style.display = 'none';
 }
 
 // ─────────────────────────────────────────
@@ -1483,7 +1607,19 @@ function showChampion(poke) {
       + TYPE_EMOJI[t.type.name] + ' ' + t.type.name + '</span>';
   }).join('');
   document.getElementById('champ-title').textContent = 'CHAMPION!';
-  var sub = T.mode==='mega' ? 'MEGA TOURNAMENT CHAMPION' : _twoPlayer ? ('P1: '+_p1wins+' | P2: '+_p2wins) : 'TOURNAMENT WINNER';
+  var sub;
+  if (_twoPlayer) {
+    hide2PBar();
+    var btn = document.getElementById('two-p-btn');
+    if (btn) { btn.textContent='2P MODE'; btn.style.borderColor=''; btn.style.color=''; }
+    sub = _p1wins > _p2wins
+      ? _p1name + ' WINS! (' + _p1wins + ' vs ' + _p2wins + ')'
+      : _p2wins > _p1wins
+      ? _p2name + ' WINS! (' + _p2wins + ' vs ' + _p1wins + ')'
+      : 'TIE GAME! ' + _p1wins + '-' + _p2wins;
+  } else {
+    sub = T.mode==='mega' ? 'MEGA TOURNAMENT CHAMPION' : 'TOURNAMENT WINNER';
+  }
   document.getElementById('champ-sub').textContent = sub;
   document.getElementById('champ-card').innerHTML =
     '<div style="font-family:monospace;font-size:7px;color:#8888aa">' + (poke.id<10000?'#'+String(poke.id).padStart(3,'0')+' GEN '+genLbl(poke.id):genLbl(poke.id)) + '</div>'
