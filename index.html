@@ -1291,14 +1291,12 @@ function renderCurrentBattle() {
   fb.onclick = function() { pickWinner('b'); };
   // 2P colors and context
   if (_twoPlayer) {
-    var owner = get2POwner(T.match, round.length);
     var isFinal = round.length === 1;
     if (isFinal) {
       fa.classList.add('final-card'); fb.classList.add('final-card');
-      // Show grand final banner
       var hint = document.getElementById('battle-hint');
       if (hint) hint.innerHTML = '<span class="two-p-final-banner">&#127942; GRAND FINAL! &#127942;</span>';
-    } else if (owner === 'p1') {
+    } else if (_twoPturn === 'p1') {
       fa.classList.add('p1-card'); fb.classList.add('p1-card');
     } else {
       fa.classList.add('p2-card'); fb.classList.add('p2-card');
@@ -1376,10 +1374,10 @@ function pickWinner(side) {
     var next = T.match + 1;
     while (next < round.length && (round[next].winner !== null || !round[next].a || !round[next].b)) next++;
     if (next < round.length) {
-      // Score the match that just finished (before advancing)
-      if (_twoPlayer && round.length > 1) {
-        var owner = get2POwner(T.match, round.length);
-        if (owner === 'p1') _p1wins++; else _p2wins++;
+      // Score whoever just picked, then flip turn
+      if (_twoPlayer) {
+        if (_twoPturn === 'p1') _p1wins++; else _p2wins++;
+        _twoPturn = _twoPturn === 'p1' ? 'p2' : 'p1';
       }
       T.match = next;
       // Fade cards between matches
@@ -1399,6 +1397,11 @@ function pickWinner(side) {
     // Build next round
     var nextRound = mkBracketRound(seedPokes(winners));
     T.bracket.push(nextRound); T.round++;
+    // Score and flip turn for the last match of the round
+    if (_twoPlayer) {
+      if (_twoPturn === 'p1') _p1wins++; else _p2wins++;
+      _twoPturn = _twoPturn === 'p1' ? 'p2' : 'p1';
+    }
     _prevState = null; _canUndo = false; updateUndoBtn();
     var nm = 0;
     while (nm < nextRound.length && (nextRound[nm].winner !== null || !nextRound[nm].a || !nextRound[nm].b)) nm++;
@@ -1475,9 +1478,8 @@ function toggle2Player() {
 }
 
 function get2POwner(matchIdx, roundLen) {
-  if (roundLen === 1) return _twoPturn; // grand final
-  var half = Math.floor(roundLen / 2);
-  return matchIdx < half ? 'p1' : 'p2';
+  // Simple alternating — whoever's turn it is owns this match
+  return _twoPturn;
 }
 
 function update2PBar() {
@@ -1494,17 +1496,14 @@ function update2PBar() {
   if (p2el) p2el.textContent = _p2name;
   if (p1pts) p1pts.textContent = _p1wins;
   if (p2pts) p2pts.textContent = _p2wins;
+  var ownerName = _twoPturn === 'p1' ? _p1name : _p2name;
+  var ownerColor = _twoPturn === 'p1' ? '#6390F0' : '#7AC74C';
   var round = T.bracket[T.round];
   var rlen = round ? round.length : 2;
-  var owner = rlen === 1 ? _twoPturn : get2POwner(T.match, rlen);
-  var ownerName = owner === 'p1' ? _p1name : _p2name;
-  var ownerColor = owner === 'p1' ? '#6390F0' : '#7AC74C';
   if (turnEl) {
-    if (rlen === 1) {
-      turnEl.textContent = 'GRAND FINAL - ' + ownerName + ' PICKS!';
-    } else {
-      turnEl.textContent = ownerName + "'S TURN";
-    }
+    turnEl.textContent = rlen===1
+      ? 'GRAND FINAL - ' + ownerName + ' PICKS!'
+      : ownerName + "'S TURN - TAP YOUR POKEMON!";
     turnEl.style.color = ownerColor;
   }
 }
