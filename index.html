@@ -1376,27 +1376,12 @@ function pickWinner(side) {
     var next = T.match + 1;
     while (next < round.length && (round[next].winner !== null || !round[next].a || !round[next].b)) next++;
     if (next < round.length) {
-      T.match = next;
-      // In 2P mode: check if we need to score and whose turn next
-      if (_twoPlayer) {
-        var rlen = round.length;
-        var isFinal = rlen === 1;
-        if (!isFinal) {
-          var prevOwner = get2POwner(T.match - 1 >= 0 ? T.match - 1 : 0, rlen);
-          // Did the right player pick? Score them
-          // We already recorded the pick — now check conference
-          var winnerMatchIdx = T.match - 1;
-          if (winnerMatchIdx < 0) winnerMatchIdx = 0;
-          // Score: if owner picked winner (always true since they picked), 
-          // give them a point for advancing their side
-          var pointOwner = get2POwner(winnerMatchIdx, rlen);
-          if (pointOwner === 'p1') _p1wins++;
-          else _p2wins++;
-        } else {
-          // Grand final — alternate who picks
-          _twoPturn = _twoPturn === 'p1' ? 'p2' : 'p1';
-        }
+      // Score the match that just finished (before advancing)
+      if (_twoPlayer && round.length > 1) {
+        var owner = get2POwner(T.match, round.length);
+        if (owner === 'p1') _p1wins++; else _p2wins++;
       }
+      T.match = next;
       // Fade cards between matches
       fa.style.transition = 'opacity .2s'; fb.style.transition = 'opacity .2s';
       fa.style.opacity = '0'; fb.style.opacity = '0';
@@ -1464,12 +1449,14 @@ function spawnConfetti() {
 function toggle2Player() {
   if (!_twoPlayer) {
     // Prompt for player names
-    var n1 = prompt('Player 1 name:', 'PLAYER 1');
-    if (!n1) return;
-    var n2 = prompt('Player 2 name:', 'PLAYER 2');
-    if (!n2) return;
-    _p1name = n1.toUpperCase().slice(0,12);
-    _p2name = n2.toUpperCase().slice(0,12);
+    var n1 = prompt('Player 1 name (Blue side):');
+    if (n1 === null) return;
+    if (!n1.trim()) n1 = 'PLAYER 1';
+    var n2 = prompt('Player 2 name (Green side):');
+    if (n2 === null) return;
+    if (!n2.trim()) n2 = 'PLAYER 2';
+    _p1name = n1.trim().toUpperCase().slice(0,12);
+    _p2name = n2.trim().toUpperCase().slice(0,12);
     _twoPlayer = true;
     _p1wins = 0; _p2wins = 0;
     _twoPturn = 'p1';
@@ -1488,11 +1475,9 @@ function toggle2Player() {
 }
 
 function get2POwner(matchIdx, roundLen) {
-  // Left half of bracket = P1, Right half = P2
-  // Grand Final (roundLen === 1) = both players, alternating pick
-  if (roundLen === 1) return _twoPturn; // grand final — whoever's turn
-  var halfSize = Math.floor(roundLen / 2);
-  return matchIdx < halfSize ? 'p1' : 'p2';
+  if (roundLen === 1) return _twoPturn; // grand final
+  var half = Math.floor(roundLen / 2);
+  return matchIdx < half ? 'p1' : 'p2';
 }
 
 function update2PBar() {
@@ -1510,13 +1495,16 @@ function update2PBar() {
   if (p1pts) p1pts.textContent = _p1wins;
   if (p2pts) p2pts.textContent = _p2wins;
   var round = T.bracket[T.round];
-  var match = round ? round[T.match] : null;
   var rlen = round ? round.length : 2;
-  var owner = match ? get2POwner(T.match, rlen) : _twoPturn;
+  var owner = rlen === 1 ? _twoPturn : get2POwner(T.match, rlen);
   var ownerName = owner === 'p1' ? _p1name : _p2name;
   var ownerColor = owner === 'p1' ? '#6390F0' : '#7AC74C';
   if (turnEl) {
-    turnEl.textContent = rlen===1 ? 'GRAND FINAL - ' + ownerName + ' PICKS FIRST!' : ownerName + "'S TURN";
+    if (rlen === 1) {
+      turnEl.textContent = 'GRAND FINAL - ' + ownerName + ' PICKS!';
+    } else {
+      turnEl.textContent = ownerName + "'S TURN";
+    }
     turnEl.style.color = ownerColor;
   }
 }
