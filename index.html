@@ -106,6 +106,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 @keyframes loseShake{0%{transform:scale(1)}15%{transform:scale(.97) translateX(-5px)}35%{transform:scale(.96) translateX(4px)}100%{transform:scale(.95);opacity:.25;filter:grayscale(1)}}
 @keyframes chosenPulse{0%,100%{box-shadow:0 0 25px rgba(255,203,5,.5)}50%{box-shadow:0 0 45px rgba(255,203,5,.9)}}
 @keyframes screenFlash{0%{opacity:0}15%{opacity:.2}100%{opacity:0}}
+@keyframes particleFloat{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-120px) scale(.3);opacity:0}}
+@keyframes particleRipple{0%{transform:scale(.1);opacity:.8;border-width:8px}100%{transform:scale(4);opacity:0;border-width:1px}}
+@keyframes particleSpark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}
+@keyframes particleSwirl{0%{transform:rotate(0deg) translateX(0) scale(0);opacity:0}30%{opacity:1;transform:rotate(180deg) translateX(40px) scale(1)}100%{transform:rotate(720deg) translateX(0) scale(0);opacity:0}}
+@keyframes particleLeaf{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),-80px) rotate(720deg);opacity:0}}
+@keyframes particlePsychic{0%{transform:scale(.2);opacity:0;filter:hue-rotate(0deg)}40%{opacity:1}100%{transform:scale(2.5);opacity:0;filter:hue-rotate(360deg)}}
 @keyframes confettiDrop{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
 @keyframes upsetPop{0%{transform:scale(0) rotate(-15deg);opacity:0}60%{transform:scale(1.2) rotate(3deg)}100%{transform:scale(1);opacity:1}}
 @keyframes streakGlow{0%,100%{text-shadow:0 0 8px currentColor}50%{text-shadow:0 0 20px currentColor}}
@@ -352,6 +358,29 @@ header{text-align:center;padding:20px 16px 8px;position:relative;z-index:2;}
 .hof-name{font-family:monospace;font-size:9px;color:#f0f0ff;text-transform:uppercase;letter-spacing:1px;}
 .hof-meta{font-family:monospace;font-size:7px;color:#6666aa;margin-top:2px;}
 .hof-bst{font-family:monospace;font-size:8px;color:#ffcb05;flex-shrink:0;text-align:right;}
+
+/* ── Stage Backgrounds ── */
+#battle-screen{position:relative;transition:background 1.2s ease;}
+#battle-screen::before{content:'';position:absolute;inset:0;z-index:-1;opacity:.55;
+  background:var(--stage-bg,radial-gradient(ellipse at center,#1a1a35,#0b0b18));
+  transition:background 1.2s ease,opacity 1.2s ease;}
+#battle-screen::after{content:'';position:absolute;inset:0;z-index:-1;
+  background:var(--stage-overlay,none);opacity:.4;pointer-events:none;}
+.stage-r1{
+  --stage-bg:radial-gradient(ellipse at 30% 80%,#1a4d2e 0%,#0a1a14 60%);
+  --stage-overlay:radial-gradient(circle at 80% 20%,rgba(122,199,76,.15),transparent 50%);}
+.stage-r2{
+  --stage-bg:linear-gradient(180deg,#3a2a1a 0%,#0d0805 70%);
+  --stage-overlay:radial-gradient(circle at 20% 30%,rgba(230,126,34,.18),transparent 50%);}
+.stage-r3{
+  --stage-bg:linear-gradient(180deg,#2a3a55 0%,#0b1020 80%);
+  --stage-overlay:radial-gradient(ellipse at 50% 10%,rgba(99,144,240,.2),transparent 60%);}
+.stage-r4{
+  --stage-bg:radial-gradient(ellipse at center,#3a1f4e 0%,#0a0518 70%);
+  --stage-overlay:radial-gradient(circle at 50% 50%,rgba(155,89,182,.25),transparent 40%);}
+.stage-final{
+  --stage-bg:radial-gradient(ellipse at center,#553a0a 0%,#3b1f00 50%,#0a0500 100%);
+  --stage-overlay:radial-gradient(circle at 50% 0%,rgba(255,203,5,.3),transparent 50%);}
 
 /* ── 2 Player Mode ── */
 .two-p-bar{display:none;padding:6px 12px;background:rgba(11,11,24,.95);
@@ -607,6 +636,17 @@ header{text-align:center;padding:20px 16px 8px;position:relative;z-index:2;}
   <div class="champ-btns" id="champ-btns"></div>
 </div>
 
+<!-- ══════════════════════════════════ VAULT DETAIL ══════════════════════════════════ -->
+<div id="vault-screen" class="screen">
+  <div style="padding:16px 14px 50px">
+    <div id="vault-detail"></div>
+    <div style="text-align:center;margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="back-btn" onclick="go('hof-screen');renderHOF()">BACK TO HOF</button>
+      <button class="back-btn" onclick="go('home-screen')">HOME</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════ HALL OF FAME ══════════════════════════════════ -->
 <div id="hof-screen" class="screen">
   <div style="text-align:center;padding:0 14px 12px">
@@ -811,11 +851,41 @@ function getHOF() { try { return JSON.parse(localStorage.getItem(HOF_KEY)||'[]')
 function recordChampion(poke, mode) {
   try {
     var h = getHOF();
-    h.unshift({
+    // Build path: list of Pokemon the champion defeated, round by round
+    var path = [];
+    if (T && T.bracket) {
+      T.bracket.forEach(function(round) {
+        round.forEach(function(match) {
+          if (match.winner && match.winner.id === poke.id && match.a && match.b) {
+            var defeated = match.winner.id === match.a.id ? match.b : match.a;
+            path.push({id: defeated.id, name: cleanName(defeated.name)});
+          }
+        });
+      });
+    }
+    // Find runner-up (loser of final)
+    var runnerUp = null;
+    if (T && T.bracket && T.bracket.length > 0) {
+      var finalRound = T.bracket[T.bracket.length-1];
+      if (finalRound && finalRound[0]) {
+        var f = finalRound[0];
+        if (f.a && f.b && f.winner) {
+          var lo = f.winner.id === f.a.id ? f.b : f.a;
+          runnerUp = {id: lo.id, name: cleanName(lo.name), bst: bst(lo.stats)};
+        }
+      }
+    }
+    var entry = {
       id: poke.id, name: cleanName(poke.name),
       bst: bst(poke.stats), mode: mode,
-      date: new Date().toLocaleDateString()
-    });
+      date: new Date().toLocaleDateString(),
+      path: path,
+      runnerUp: runnerUp,
+      matches: _tourneyMatches || 0,
+      upsets: _tourneyUpsets || 0,
+      twoP: _twoPlayer ? {p1:_p1name, p2:_p2name, p1w:_p1wins, p2w:_p2wins} : null
+    };
+    h.unshift(entry);
     if (h.length > 30) h = h.slice(0, 30);
     localStorage.setItem(HOF_KEY, JSON.stringify(h));
   } catch(e) {}
@@ -836,20 +906,150 @@ function renderHOF() {
   h.forEach(function(e, i) {
     var div = document.createElement('div');
     div.className = 'hof-entry';
+    div.style.cursor = 'pointer';
     div.style.animationDelay = (i * 0.04) + 's';
+    var pathHint = e.path && e.path.length ? (e.path.length + ' wins') : '';
+    var detailHint = pathHint ? (' &middot; <span style="color:#7AC74C">TAP FOR VAULT</span>') : '';
     div.innerHTML = '<div class="hof-rank">' + (i === 0 ? '&#127942;' : i+1) + '</div>'
       + '<img class="hof-img" src="' + imgFb(e.id) + '" alt="' + e.name + '">'
       + '<div class="hof-info"><div class="hof-name">' + e.name + '</div>'
-      + '<div class="hof-meta">' + e.mode.toUpperCase() + ' &middot; ' + e.date + '</div></div>'
+      + '<div class="hof-meta">' + e.mode.toUpperCase() + ' &middot; ' + e.date + detailHint + '</div></div>'
       + '<div class="hof-bst">' + e.bst + '<br><span style="font-size:7px;color:#444466">BST</span></div>';
+    div.onclick = function() { openVaultEntry(i); };
     el.appendChild(div);
   });
+}
+
+function openVaultEntry(idx) {
+  var h = getHOF();
+  var e = h[idx]; if (!e) return;
+  var el = document.getElementById('vault-detail');
+  if (!el) return;
+  var pathH = '';
+  if (e.path && e.path.length) {
+    pathH = '<div style="font-family:monospace;font-size:8px;color:#888;letter-spacing:1px;margin-bottom:8px">DEFEATED ' + e.path.length + ' OPPONENTS:</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+    e.path.forEach(function(p, i) {
+      pathH += '<div style="display:flex;flex-direction:column;align-items:center;width:60px">'
+        + '<img src="' + imgFb(p.id) + '" alt="' + p.name + '" style="width:44px;height:44px;object-fit:contain;image-rendering:pixelated;opacity:.7">'
+        + '<div style="font-family:monospace;font-size:6px;color:#aaa;text-align:center;margin-top:2px">' + p.name + '</div></div>';
+    });
+    pathH += '</div>';
+  }
+  var runnerH = '';
+  if (e.runnerUp) {
+    runnerH = '<div style="font-family:monospace;font-size:8px;color:#888;letter-spacing:1px;margin-bottom:6px">RUNNER UP:</div>'
+      + '<div style="display:flex;align-items:center;gap:10px;background:#0a0a18;border:1px solid #252545;border-radius:10px;padding:8px 12px;margin-bottom:12px">'
+      + '<img src="' + imgFb(e.runnerUp.id) + '" style="width:44px;height:44px;object-fit:contain;image-rendering:pixelated">'
+      + '<div style="flex:1"><div style="font-family:monospace;font-size:9px;color:#f0f0ff">' + e.runnerUp.name + '</div>'
+      + '<div style="font-family:monospace;font-size:7px;color:#888">BST: ' + (e.runnerUp.bst || '?') + '</div></div></div>';
+  }
+  var twoPH = '';
+  if (e.twoP) {
+    var winner = e.twoP.p1w > e.twoP.p2w ? e.twoP.p1 : e.twoP.p2w > e.twoP.p1w ? e.twoP.p2 : 'TIE';
+    twoPH = '<div style="background:linear-gradient(135deg,#3b4cca22,#6390F022);border:1px solid #3b4cca;border-radius:10px;padding:10px;margin-bottom:12px;font-family:monospace;font-size:9px;color:#9999ee;text-align:center">'
+      + '<div style="letter-spacing:1px;font-weight:bold;margin-bottom:4px">2 PLAYER GAME</div>'
+      + '<span style="color:#6390F0">' + e.twoP.p1 + ': ' + e.twoP.p1w + '</span>'
+      + ' &nbsp;|&nbsp; <span style="color:#7AC74C">' + e.twoP.p2 + ': ' + e.twoP.p2w + '</span>'
+      + (winner !== 'TIE' ? '<div style="margin-top:4px;color:#ffcb05">WINNER: ' + winner + '</div>' : '<div style="margin-top:4px">TIE GAME!</div>')
+      + '</div>';
+  }
+  el.innerHTML = '<div style="text-align:center;margin-bottom:14px">'
+    + '<img src="' + imgUrl(e.id) + '" onerror="this.onerror=null;this.src=\'' + imgFb(e.id) + '\'" style="width:140px;height:140px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 0 20px rgba(255,203,5,.5))">'
+    + '<div style="font-family:Bangers,Impact,cursive;font-size:32px;color:#ffcb05;letter-spacing:3px;text-shadow:3px 3px 0 #e3350d;margin-top:4px">' + e.name + '</div>'
+    + '<div style="font-family:monospace;font-size:8px;color:#888;margin-top:2px;letter-spacing:1px">' + e.mode.toUpperCase() + ' CHAMPION &middot; ' + e.date + '</div>'
+    + '<div style="font-family:monospace;font-size:9px;color:#ffcb05;margin-top:4px">BST: ' + e.bst + '</div>'
+    + '</div>'
+    + '<div style="background:#13132a;border:1px solid #252545;border-radius:12px;padding:14px">'
+    + twoPH + runnerH + pathH
+    + '<div style="display:flex;justify-content:space-around;font-family:monospace;font-size:8px;color:#888;letter-spacing:1px;padding-top:10px;border-top:1px solid #252545">'
+    + '<div>BATTLES: <span style="color:#ffcb05">' + (e.matches||'?') + '</span></div>'
+    + '<div>UPSETS: <span style="color:#ffcb05">' + (e.upsets||0) + '</span></div>'
+    + '</div></div>';
+  go('vault-screen');
 }
 function clearHOF() {
   if (confirm('Clear Hall of Fame?')) {
     localStorage.removeItem(HOF_KEY);
     renderHOF();
   }
+}
+
+// ── Resume / Save Tournament ──
+var SAVE_KEY = 'poke_save_v1';
+function saveTournament() {
+  try {
+    if (!T || !T.bracket || T.bracket.length === 0) return;
+    var data = {
+      bracket: T.bracket, round: T.round, match: T.match, mode: T.mode,
+      twoPlayer: _twoPlayer,
+      p1name: _p1name, p2name: _p2name,
+      p1wins: _p1wins, p2wins: _p2wins, twoPturn: _twoPturn,
+      streak: _streak,
+      tStart: _tourneyStartTime, tMatches: _tourneyMatches, tUpsets: _tourneyUpsets,
+      ts: Date.now()
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+  } catch(e) {}
+}
+function hasSavedTournament() {
+  try {
+    var s = localStorage.getItem(SAVE_KEY); if (!s) return null;
+    var d = JSON.parse(s);
+    // Expire saves older than 7 days
+    if (Date.now() - d.ts > 7*24*60*60*1000) { localStorage.removeItem(SAVE_KEY); return null; }
+    return d;
+  } catch(e) { return null; }
+}
+function resumeTournament() {
+  var d = hasSavedTournament(); if (!d) return;
+  T = {bracket:d.bracket, round:d.round, match:d.match, mode:d.mode};
+  _twoPlayer = !!d.twoPlayer;
+  _p1name = d.p1name || 'PLAYER 1';
+  _p2name = d.p2name || 'PLAYER 2';
+  _p1wins = d.p1wins||0; _p2wins = d.p2wins||0;
+  _twoPturn = d.twoPturn || 'p1';
+  _streak = d.streak || {id:null, count:0};
+  _tourneyStartTime = d.tStart || Date.now();
+  _tourneyMatches = d.tMatches || 0; _tourneyUpsets = d.tUpsets || 0;
+  _prevState = null; _canUndo = false;
+  if (_twoPlayer) { update2PBar(); } else { hide2PBar(); }
+  var btn = document.getElementById('two-p-btn');
+  if (btn) {
+    btn.textContent = _twoPlayer ? '2P: ON' : '2P MODE';
+    btn.style.borderColor = _twoPlayer ? '#7AC74C' : '';
+    btn.style.color = _twoPlayer ? '#7AC74C' : '';
+  }
+  // Set replay function based on mode
+  _replayFn = d.mode === 'mega' ? launchMega : d.mode === 'mini' ? launchMini : null;
+  go('battle-screen');
+  renderCurrentBattle();
+}
+function clearSavedTournament() { try { localStorage.removeItem(SAVE_KEY); } catch(e) {} }
+function showResumeBanner() {
+  var existing = document.getElementById('resume-banner');
+  if (existing) existing.parentNode.removeChild(existing);
+  var d = hasSavedTournament(); if (!d) return;
+  var realInRound = d.bracket[d.round].filter(function(m){return m.a&&m.b;}).length;
+  var doneInRound = d.bracket[d.round].filter(function(m){return m.a&&m.b&&m.winner!==null;}).length;
+  var ago = Math.round((Date.now()-d.ts)/60000);
+  var agoText = ago < 1 ? 'just now' : ago < 60 ? (ago+'m ago') : ago < 1440 ? (Math.round(ago/60)+'h ago') : (Math.round(ago/1440)+'d ago');
+  var modeLabel = d.mode === 'mega' ? 'MEGA' : d.mode === 'mini' ? 'MINI' : 'TOURNAMENT';
+  var banner = document.createElement('div');
+  banner.id = 'resume-banner';
+  banner.style.cssText = 'background:linear-gradient(135deg,#3b4cca,#6390F0);border-radius:14px;padding:14px 16px;margin:0 auto 14px;max-width:520px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 4px 20px rgba(59,76,202,.3);';
+  banner.innerHTML = '<div style="font-size:28px">&#9203;</div>'
+    + '<div style="flex:1;text-align:left">'
+    + '<div style="font-family:monospace;font-size:10px;color:#fff;letter-spacing:1px;font-weight:bold">RESUME ' + modeLabel + ' TOURNAMENT</div>'
+    + '<div style="font-family:monospace;font-size:8px;color:rgba(255,255,255,.7);margin-top:3px">'
+    + 'Round ' + (d.round+1) + ' &middot; Match ' + (doneInRound+1) + '/' + realInRound + ' &middot; ' + agoText + '</div>'
+    + '</div>'
+    + '<button onclick="event.stopPropagation();clearSavedTournament();showResumeBanner();" style="background:transparent;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;padding:4px 8px">&times;</button>';
+  banner.onclick = function() { resumeTournament(); };
+  // Insert at top of home screen
+  var home = document.getElementById('home-screen');
+  var modeGrid = home.querySelector('.mode-grid');
+  home.insertBefore(banner, modeGrid);
 }
 
 // Lifetime stats
@@ -945,6 +1145,21 @@ function toggleAudio() {
   if (btn) btn.textContent = _audioOn ? 'SOUND ON' : 'SOUND OFF';
 }
 
+// ── Pokemon Cries (real sound effects!) ──
+var _cryAudio = null;
+function playCry(poke) {
+  if (!_audioOn || !poke) return;
+  try {
+    var url = poke.cries && (poke.cries.latest || poke.cries.legacy);
+    if (!url) return;
+    // Stop any previous cry
+    if (_cryAudio) { try { _cryAudio.pause(); } catch(e) {} }
+    _cryAudio = new Audio(url);
+    _cryAudio.volume = 0.4;
+    _cryAudio.play().catch(function(){});
+  } catch(e) {}
+}
+
 // ─────────────────────────────────────────
 // 5. BRACKET ENGINE
 // ─────────────────────────────────────────
@@ -1005,8 +1220,11 @@ function go(id) {
   var el = document.getElementById(id);
   if (el) el.classList.add('active');
   window.scrollTo(0, 0);
-  if (id === 'home-screen' && navigator.serviceWorker && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage('GET_CACHE_SIZE');
+  if (id === 'home-screen') {
+    showResumeBanner();
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage('GET_CACHE_SIZE');
+    }
   }
 }
 
@@ -1269,9 +1487,33 @@ function startTournament(pokes, mode) {
   renderCurrentBattle();
 }
 function renderCurrentBattle() {
+  // Defensive: try up to 20 times to find a valid match.
+  // NEVER kick to home mid-tournament. If something's broken, stay put.
+  var safety = 0;
+  while (safety < 20) {
+    safety++;
+    var round = T.bracket[T.round];
+    if (!round) return; // bracket lost — stay on screen
+    // Skip past byes / completed matches in current round
+    while (T.match < round.length && (round[T.match].winner !== null || !round[T.match].a || !round[T.match].b)) {
+      T.match++;
+    }
+    // Found a real match — proceed
+    if (T.match < round.length) break;
+    // Round exhausted — collect winners and advance
+    var seen = {};
+    var winners = round.map(function(m){return m.winner;}).filter(function(w){
+      if (!w || seen[w.id]) return false; seen[w.id] = true; return true;
+    });
+    if (winners.length === 1) { showChampion(winners[0]); return; }
+    if (winners.length === 0) return; // truly broken — stay put
+    var nextRound = mkBracketRound(seedPokes(winners));
+    T.bracket.push(nextRound); T.round++; T.match = 0;
+    // Loop continues
+  }
   var round = T.bracket[T.round];
   var match = round[T.match];
-  if (!match || !match.a || !match.b) return;
+  if (!match || !match.a || !match.b) return; // never kick to home
   var rlen = round.length;
   var rname = rlen===1 ? 'GRAND FINAL!' : rlen===2 ? 'SEMI-FINALS' : rlen===4 ? 'QUARTER-FINALS' : rlen<=8 ? 'ROUND OF '+(rlen*2) : 'ROUND '+(T.round+1);
   var real = round.filter(function(m) { return m.a && m.b; });
@@ -1289,6 +1531,18 @@ function renderCurrentBattle() {
   renderCard(fb, match.b);
   fa.onclick = function() { pickWinner('a'); };
   fb.onclick = function() { pickWinner('b'); };
+  // Stage backgrounds per round
+  var battleEl = document.getElementById('battle-screen');
+  if (battleEl) {
+    battleEl.classList.remove('stage-r1','stage-r2','stage-r3','stage-r4','stage-final');
+    var stageClass;
+    if (rlen === 1) stageClass = 'stage-final';
+    else if (rlen === 2) stageClass = 'stage-r4';
+    else if (rlen === 4) stageClass = 'stage-r3';
+    else if (rlen <= 8) stageClass = 'stage-r2';
+    else stageClass = 'stage-r1';
+    battleEl.classList.add(stageClass);
+  }
   // 2P colors and context
   if (_twoPlayer) {
     var isFinal = round.length === 1;
@@ -1337,6 +1591,14 @@ function pickWinner(side) {
   // Flash and sound — instant
   triggerFlash();
   try { playPickSound(); } catch(e) {}
+  // Play the winner's real Pokemon cry!
+  var pickedWinner = side==='a' ? match.a : match.b;
+  try { playCry(pickedWinner); } catch(e) {}
+  // Type-themed particle burst from winner card
+  try {
+    var winnerType = pickedWinner.types[0] && pickedWinner.types[0].type.name;
+    spawnTypeFX(winnerType, side==='a' ? fa : fb);
+  } catch(e) {}
   // Streak badge
   var winner = side==='a' ? match.a : match.b;
   var loser  = side==='a' ? match.b : match.a;
@@ -1369,6 +1631,8 @@ function pickWinner(side) {
     _tourneyMatches++;
     // Set winner
     T.bracket[T.round][T.match].winner = winner;
+    // Save tournament state for resume
+    saveTournament();
     var round = T.bracket[T.round];
     // Find next unplayed real match
     var next = T.match + 1;
@@ -1433,6 +1697,83 @@ function showUpset() {
     spawnConfetti();
   }, 1000);
 }
+function spawnTypeFX(type, originEl) {
+  if (!type || !originEl) return;
+  try {
+    var rect = originEl.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    var fx = {
+      fire:     {emoji:'\ud83d\udd25', anim:'particleFloat', count:14, color:'#EE8130'},
+      water:    {emoji:'\ud83d\udca7', anim:'particleRipple', count:6,  color:'#6390F0'},
+      electric: {emoji:'\u26a1',        anim:'particleSpark', count:18, color:'#F7D02C'},
+      grass:    {emoji:'\ud83c\udf43', anim:'particleLeaf',  count:14, color:'#7AC74C'},
+      ice:      {emoji:'\u2744\ufe0f',  anim:'particleFloat', count:12, color:'#96D9D6'},
+      psychic:  {emoji:'\u2728',         anim:'particlePsychic',count:8, color:'#F95587'},
+      ghost:    {emoji:'\ud83d\udc7b', anim:'particleSwirl', count:10, color:'#735797'},
+      dragon:   {emoji:'\ud83d\udd25', anim:'particleSwirl', count:14, color:'#6F35FC'},
+      dark:     {emoji:'\ud83c\udf11', anim:'particleSwirl', count:10, color:'#705746'},
+      fighting: {emoji:'\ud83d\udca5', anim:'particleSpark', count:12, color:'#C22E28'},
+      rock:     {emoji:'\ud83e\udea8', anim:'particleSpark', count:10, color:'#B6A136'},
+      ground:   {emoji:'\ud83c\udf2a',  anim:'particleSpark', count:10, color:'#E2BF65'},
+      flying:   {emoji:'\ud83d\udca8', anim:'particleSwirl', count:10, color:'#A98FF3'},
+      poison:   {emoji:'\ud83d\udc80', anim:'particleFloat', count:10, color:'#A33EA1'},
+      bug:      {emoji:'\ud83d\udc1b', anim:'particleLeaf',  count:10, color:'#A6B91A'},
+      steel:    {emoji:'\u2728',         anim:'particleSpark', count:12, color:'#B7B7CE'},
+      fairy:    {emoji:'\u2728',         anim:'particlePsychic',count:10, color:'#D685AD'},
+      normal:   {emoji:'\u2728',         anim:'particleSpark', count:8,  color:'#A8A77A'}
+    };
+    var conf = fx[type] || fx.normal;
+    for (var i = 0; i < conf.count; i++) {
+      (function(idx) {
+        setTimeout(function() {
+          var p = document.createElement('div');
+          var angle = (idx / conf.count) * Math.PI * 2 + Math.random() * 0.5;
+          var dist = 60 + Math.random() * 80;
+          var dx = Math.cos(angle) * dist;
+          var dy = Math.sin(angle) * dist - 20;
+          if (conf.anim === 'particleRipple') {
+            p.style.cssText = 'position:fixed;left:' + (cx-30) + 'px;top:' + (cy-30) + 'px;'
+              + 'width:60px;height:60px;border-radius:50%;border:6px solid ' + conf.color + ';'
+              + 'pointer-events:none;z-index:90;animation:particleRipple ' + (.8 + idx*.15) + 's ease-out forwards;';
+          } else if (conf.anim === 'particleSpark') {
+            p.style.cssText = 'position:fixed;left:' + cx + 'px;top:' + cy + 'px;'
+              + 'font-size:' + (16 + Math.random()*12) + 'px;pointer-events:none;z-index:90;'
+              + '--dx:' + dx + 'px;--dy:' + dy + 'px;'
+              + 'animation:particleSpark ' + (.6 + Math.random()*.4) + 's ease-out forwards;';
+            p.textContent = conf.emoji;
+          } else if (conf.anim === 'particleLeaf') {
+            p.style.cssText = 'position:fixed;left:' + cx + 'px;top:' + cy + 'px;'
+              + 'font-size:' + (14 + Math.random()*10) + 'px;pointer-events:none;z-index:90;'
+              + '--dx:' + (dx*1.2) + 'px;'
+              + 'animation:particleLeaf ' + (1 + Math.random()*.8) + 's ease-out forwards;';
+            p.textContent = conf.emoji;
+          } else if (conf.anim === 'particleSwirl') {
+            p.style.cssText = 'position:fixed;left:' + cx + 'px;top:' + cy + 'px;'
+              + 'font-size:' + (18 + Math.random()*8) + 'px;pointer-events:none;z-index:90;'
+              + 'animation:particleSwirl ' + (.8 + Math.random()*.6) + 's ease-out forwards;';
+            p.textContent = conf.emoji;
+          } else if (conf.anim === 'particlePsychic') {
+            p.style.cssText = 'position:fixed;left:' + (cx-25) + 'px;top:' + (cy-25) + 'px;'
+              + 'width:50px;height:50px;border-radius:50%;'
+              + 'background:radial-gradient(circle,' + conf.color + 'cc,transparent);'
+              + 'pointer-events:none;z-index:90;'
+              + 'animation:particlePsychic ' + (.9 + idx*.1) + 's ease-out forwards;';
+          } else {
+            // particleFloat
+            p.style.cssText = 'position:fixed;left:' + (cx + (Math.random()-0.5)*60) + 'px;top:' + cy + 'px;'
+              + 'font-size:' + (16 + Math.random()*14) + 'px;pointer-events:none;z-index:90;'
+              + 'animation:particleFloat ' + (.8 + Math.random()*.6) + 's ease-out forwards;';
+            p.textContent = conf.emoji;
+          }
+          document.body.appendChild(p);
+          setTimeout(function() { if (p.parentNode) p.parentNode.removeChild(p); }, 2000);
+        }, idx * 35);
+      })(i);
+    }
+  } catch(e) {}
+}
+
 function spawnConfetti() {
   var cols = ['#ffcb05','#e3350d','#3b4cca','#7AC74C','#F95587','#7AC74C'];
   for (var i = 0; i < 28; i++) {
@@ -1586,6 +1927,7 @@ function renderBracketView() {
 // 12. CHAMPION SCREEN
 // ─────────────────────────────────────────
 function showChampion(poke) {
+  clearSavedTournament();  // tournament complete
   recordChampion(poke, T.mode);
   recordTournament();
   var typeH = poke.types.map(function(t) {
@@ -1630,6 +1972,8 @@ function showChampion(poke) {
   go('champ-screen');
   spawnConfetti();
   try { playFanfare(); } catch(e) {}
+  // Champion roar!
+  setTimeout(function(){ try { playCry(poke); } catch(e) {} }, 1200);
 }
 
 // ─────────────────────────────────────────
@@ -1694,6 +2038,11 @@ function pickerPick(side, p1, p2) {
   var winner = side==='a' ? p1 : p2;
   recordWin(winner.id); recordPick();
   try { playPickSound(); } catch(e) {}
+  try { playCry(winner); } catch(e) {}
+  try {
+    var pt = winner.types[0] && winner.types[0].type.name;
+    spawnTypeFX(pt, side==='a' ? pa : pb);
+  } catch(e) {}
 }
 
 // ─────────────────────────────────────────
@@ -1845,6 +2194,13 @@ function handleClashPick(side) {
   ca.classList.add(side==='a'?'winner':'loser','locked');
   cb.classList.add(side==='b'?'winner':'loser','locked');
   ca.onclick=null; cb.onclick=null;
+  // Play winner's cry + particle FX
+  var clashWinner = side==='a' ? _clash.cycleA[_clash.posA] : _clash.cycleB[_clash.posB];
+  try { playCry(clashWinner); } catch(e) {}
+  try {
+    var ct = clashWinner.types[0] && clashWinner.types[0].type.name;
+    spawnTypeFX(ct, side==='a' ? ca : cb);
+  } catch(e) {}
   var tA=[...state.clashTypeA][0]; var tB=[...state.clashTypeB][0];
   _clash.score.a+=(side==='a'?1:0); _clash.score.b+=(side==='b'?1:0); _clash.score.round++;
   var maxR=state.clashRounds===999?Math.max(_clash.poolA.length,_clash.poolB.length):state.clashRounds;
@@ -1887,6 +2243,7 @@ function showClashResult(wt, sA, sB, tA, tB) {
 // 17. INIT (always last)
 // ─────────────────────────────────────────
 initFilters();
+showResumeBanner();
 </script>
 </body>
 </html>
