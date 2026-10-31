@@ -3,18 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Pokemon Ultimate</title>
+<title>Pokémon Ultimate — Championship Arena</title>
 <link rel="manifest" href="./manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Pokemon Ultimate">
+<meta name="apple-mobile-web-app-title" content="Pokémon Ultimate">
 <link rel="apple-touch-icon" href="./icon-512.png">
-<meta name="theme-color" content="#0b0b18">
+<meta name="theme-color" content="#070b12">
+<meta name="description" content="Championship arena for Random Picker, Mini Tournament, Mega Tournament & Type Clash. Gen 1–4.">
 <link rel="icon" type="image/x-icon" href="./favicon.ico">
+<link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 
-<!-- ═══ SERVICE WORKER (isolated, tiny) ═══ -->
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -34,7 +35,7 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.addEventListener('message', function(e) {
           if (e.data && e.data.type === 'CACHE_SIZE') {
             var el = document.getElementById('cache-count');
-            if (el) el.textContent = e.data.count + ' POKEMON CACHED OFFLINE';
+            if (el) el.textContent = e.data.count + ' assets cached offline';
           }
         });
       })
@@ -49,15 +50,14 @@ function showUpdateBanner() {
   if (document.getElementById('update-banner')) return;
   var b = document.createElement('div');
   b.id = 'update-banner';
-  b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999;background:#3b4cca;'
-    + 'color:#fff;text-align:center;padding:10px;font-family:monospace;font-size:10px;'
-    + 'display:flex;align-items:center;justify-content:center;gap:12px;letter-spacing:1px;';
-  b.innerHTML = '<span>NEW VERSION AVAILABLE!</span>'
-    + '<button onclick="applyUpdate()" style="background:#ffcb05;color:#0b0b18;border:none;'
-    + 'border-radius:20px;padding:5px 14px;font-family:monospace;font-size:10px;'
-    + 'font-weight:bold;cursor:pointer;">UPDATE</button>'
+  b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999;background:#e63b2e;'
+    + 'color:#fff;text-align:center;padding:12px;font-family:Figtree,sans-serif;font-size:12px;'
+    + 'display:flex;align-items:center;justify-content:center;gap:12px;letter-spacing:0.08em;text-transform:uppercase;';
+  b.innerHTML = '<span>New version available</span>'
+    + '<button onclick="applyUpdate()" style="background:#f0c14b;color:#1a1200;border:none;'
+    + 'border-radius:999px;padding:6px 14px;font-weight:700;cursor:pointer;letter-spacing:0.06em;">Update</button>'
     + '<button onclick="this.parentNode.remove()" style="background:transparent;border:none;'
-    + 'color:#fff;font-size:16px;cursor:pointer;">x</button>';
+    + 'color:#fff;font-size:18px;cursor:pointer;">×</button>';
   document.body.appendChild(b);
 }
 function applyUpdate() {
@@ -73,2177 +73,320 @@ function updateNetBanner(online) {
   if (!online) {
     var d = document.createElement('div');
     d.id = 'net-banner';
-    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:500;background:#705746;'
-      + 'color:#fff;text-align:center;padding:8px;font-family:monospace;font-size:10px;letter-spacing:1px;';
-    d.textContent = 'OFFLINE - Showing cached Pokemon only';
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:500;background:#3a2a1a;'
+      + 'color:#fff;text-align:center;padding:10px;font-family:Figtree,sans-serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;';
+    d.textContent = 'Offline — showing cached Pokémon only';
     document.body.appendChild(d);
   }
 }
 </script>
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap');
-*{box-sizing:border-box;}
-html,body{margin:0;padding:0;background:#0b0b18;}
-body{color:#f0f0ff;font-family:'Nunito','Helvetica Neue',sans-serif;min-height:100vh;
-  min-height:100dvh;overflow-x:hidden;
-  padding-top:env(safe-area-inset-top);
-  padding-bottom:env(safe-area-inset-bottom);}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse at 15% 25%,rgba(59,76,202,.12),transparent 55%),
-             radial-gradient(ellipse at 85% 75%,rgba(227,53,13,.09),transparent 55%);}
-#app-root{background:#0b0b18;min-height:100vh;position:relative;color:#f0f0ff;}
-
-/* ── Animations ── */
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes slideDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes slideInLeft{from{opacity:0;transform:translateX(-60px)}to{opacity:1;transform:translateX(0)}}
-@keyframes slideInRight{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}
-@keyframes wflash{0%{box-shadow:0 0 0 rgba(255,203,5,0)}30%{box-shadow:0 0 50px rgba(255,203,5,.9)}100%{box-shadow:0 0 25px rgba(255,203,5,.5)}}
-@keyframes loseShake{0%{transform:scale(1)}15%{transform:scale(.97) translateX(-5px)}35%{transform:scale(.96) translateX(4px)}100%{transform:scale(.95);opacity:.25;filter:grayscale(1)}}
-@keyframes chosenPulse{0%,100%{box-shadow:0 0 25px rgba(255,203,5,.5)}50%{box-shadow:0 0 45px rgba(255,203,5,.9)}}
-@keyframes screenFlash{0%{opacity:0}15%{opacity:.2}100%{opacity:0}}
-@keyframes particleFloat{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-120px) scale(.3);opacity:0}}
-@keyframes particleRipple{0%{transform:scale(.1);opacity:.8;border-width:8px}100%{transform:scale(4);opacity:0;border-width:1px}}
-@keyframes particleSpark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}
-@keyframes particleSwirl{0%{transform:rotate(0deg) translateX(0) scale(0);opacity:0}30%{opacity:1;transform:rotate(180deg) translateX(40px) scale(1)}100%{transform:rotate(720deg) translateX(0) scale(0);opacity:0}}
-@keyframes particleLeaf{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),-80px) rotate(720deg);opacity:0}}
-@keyframes particlePsychic{0%{transform:scale(.2);opacity:0;filter:hue-rotate(0deg)}40%{opacity:1}100%{transform:scale(2.5);opacity:0;filter:hue-rotate(360deg)}}
-@keyframes confettiDrop{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
-@keyframes upsetPop{0%{transform:scale(0) rotate(-15deg);opacity:0}60%{transform:scale(1.2) rotate(3deg)}100%{transform:scale(1);opacity:1}}
-@keyframes streakGlow{0%,100%{text-shadow:0 0 8px currentColor}50%{text-shadow:0 0 20px currentColor}}
-@keyframes champPop{from{transform:scale(.2) rotate(-12deg);opacity:0}to{transform:scale(1);opacity:1}}
-@keyframes hofEntry{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
-
-/* ── Scrollbar ── */
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:#0a0a18}
-::-webkit-scrollbar-thumb{background:#2a2a4a;border-radius:2px}
-
-/* ── Screens ── */
-.screen{display:none;position:relative;z-index:1;}
-.screen.active{display:block;animation:fadeIn .3s ease;}
-#loading-screen.active,#champ-screen.active{display:flex;}
-
-/* ── Header ── */
-header{text-align:center;padding:20px 16px 8px;position:relative;z-index:2;}
-.game-title{font-family:'Bangers',Impact,cursive;font-size:clamp(28px,7vw,56px);
-  letter-spacing:4px;color:#ffcb05;
-  text-shadow:4px 4px 0 #e3350d,6px 6px 0 rgba(0,0,0,.4);line-height:1;}
-.game-sub{font-family:monospace;font-size:8px;color:#8888aa;margin-top:4px;letter-spacing:2px;}
-
-/* ── Home ── */
-#home-screen{padding:12px 14px 40px;}
-.mode-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;max-width:860px;margin:0 auto;}
-.mode-card{background:#13132a;border:2px solid #252545;border-radius:16px;padding:20px 16px;
-  cursor:pointer;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden;
-  transition:transform .15s,border-color .15s;}
-.mode-card:active{transform:scale(.98);}
-.mode-card::before{content:'';position:absolute;inset:0;background:var(--mc,#3b4cca);opacity:.06;}
-.mode-icon{font-size:clamp(24px,5vw,36px);line-height:1;}
-.mode-name{font-family:'Bangers',Impact,cursive;font-size:clamp(18px,3.5vw,24px);letter-spacing:2px;}
-.mode-desc{font-size:12px;color:#aaaacc;line-height:1.5;}
-.mode-badge{font-family:monospace;font-size:7px;padding:3px 8px;border-radius:20px;border:1.5px solid;width:fit-content;margin-top:2px;}
-.home-footer{text-align:center;padding:8px 0 16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
-
-/* ── Setup ── */
-.setup-wrap{max-width:540px;margin:0 auto;padding:16px 14px 50px;}
-.setup-title{font-family:'Bangers',Impact,cursive;font-size:clamp(22px,5vw,36px);letter-spacing:3px;text-align:center;margin-bottom:14px;}
-.filter-label{font-family:monospace;font-size:8px;color:#bbbbdd;letter-spacing:1px;margin-bottom:6px;margin-top:14px;}
-.gen-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:4px;}
-.gen-btn{font-family:monospace;font-size:8px;padding:7px 13px;border-radius:9px;
-  border:2px solid #252545;background:#090915;color:#aaaacc;cursor:pointer;transition:all .2s;}
-.gen-btn.on{border-color:#6390F0;color:#6390F0;background:rgba(99,144,240,.15);}
-.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px;}
-.type-btn{display:flex;align-items:center;gap:6px;padding:8px 9px;border-radius:10px;
-  border:2px solid #252545;background:#0f0f20;color:#aaaacc;cursor:pointer;
-  transition:all .18s;font-family:monospace;font-size:8px;}
-.type-btn:disabled{opacity:.35;cursor:not-allowed;}
-.type-emoji{font-size:15px;line-height:1;flex-shrink:0;}
-.size-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:4px;}
-.sz-btn{font-family:monospace;font-size:8px;padding:7px 13px;border-radius:9px;
-  border:2px solid #252545;background:#090915;color:#aaaacc;cursor:pointer;transition:all .2s;}
-.sz-btn.on{border-color:#ffcb05;color:#ffcb05;background:rgba(255,203,5,.1);}
-.setup-btns{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
-.action-btn{font-family:monospace;font-size:clamp(8px,1.6vw,10px);padding:11px 24px;
-  border:none;border-radius:50px;cursor:pointer;color:#fff;transition:all .15s;letter-spacing:1px;}
-.action-btn:disabled{opacity:.4;cursor:not-allowed;}
-.back-btn{font-family:monospace;font-size:8px;padding:8px 14px;background:transparent;
-  border:2px solid #444466;color:#9999bb;border-radius:30px;cursor:pointer;letter-spacing:1px;}
-.undo-btn{font-family:monospace;font-size:8px;padding:8px 14px;background:transparent;
-  border:2px solid #ffcb05;color:#ffcb05;border-radius:30px;cursor:pointer;font-weight:bold;}
-.info-badge{font-family:monospace;font-size:8px;background:#1a1a35;border:1px solid #35356a;
-  border-radius:20px;padding:6px 14px;color:#aaaacc;text-align:center;display:inline-block;margin-top:8px;}
-.mega-toggle-btn{display:flex;align-items:center;gap:10px;padding:11px 14px;
-  border-radius:12px;cursor:pointer;width:100%;font-family:monospace;
-  font-size:9px;letter-spacing:1px;transition:all .2s;margin-top:12px;text-align:left;}
-
-/* ── Loading ── */
-#loading-screen{flex-direction:column;align-items:center;justify-content:center;
-  min-height:60vh;gap:18px;padding:40px;text-align:center;}
-.pokeball{width:72px;height:72px;border-radius:50%;
-  background:linear-gradient(180deg,#e3350d 50%,#f0f0ff 50%);
-  border:5px solid #1a1a35;position:relative;animation:spin .7s linear infinite;}
-.pokeball::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:20px;height:20px;background:#f0f0ff;border-radius:50%;border:4px solid #1a1a35;}
-.load-text{font-family:monospace;font-size:9px;color:#aaaacc;line-height:2.2;text-align:center;}
-.load-prog{width:240px;height:8px;background:#111;border-radius:4px;border:1px solid #252545;overflow:hidden;}
-.load-bar{height:100%;background:linear-gradient(90deg,#3b4cca,#ffcb05);border-radius:4px;width:0%;transition:width .3s;}
-
-/* ── Round transition overlay ── */
-#round-transition{position:fixed;inset:0;z-index:100;background:rgba(11,11,24,.95);
-  display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
-#round-transition.visible{display:flex;}
-.trans-pokeball{width:64px;height:64px;border-radius:50%;
-  background:linear-gradient(180deg,#e3350d 50%,#f0f0ff 50%);
-  border:5px solid #1a1a35;position:relative;animation:spin .7s linear infinite;}
-.trans-pokeball::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:18px;height:18px;background:#f0f0ff;border-radius:50%;border:4px solid #1a1a35;}
-.trans-label{font-family:'Bangers',Impact,cursive;font-size:clamp(24px,6vw,42px);
-  color:#ffcb05;letter-spacing:3px;text-shadow:3px 3px 0 #e3350d;text-align:center;}
-.trans-sub{font-family:monospace;font-size:8px;color:#9999bb;letter-spacing:1px;}
-
-/* ── Screen flash ── */
-#pick-flash{position:fixed;inset:0;z-index:99;pointer-events:none;
-  background:rgba(255,203,5,.15);opacity:0;display:none;}
-
-/* ── Upset banner ── */
-#upset-banner{position:fixed;inset:0;z-index:95;display:none;
-  align-items:center;justify-content:center;pointer-events:none;}
-.upset-text{font-family:'Bangers',Impact,cursive;font-size:clamp(48px,12vw,96px);
-  color:#ffcb05;text-shadow:5px 5px 0 #e3350d;letter-spacing:4px;
-  animation:upsetPop .5s cubic-bezier(.175,.885,.32,1.275);}
-
-/* ── Battle screen ── */
-#battle-screen{padding:0 10px 16px;}
-.round-banner{text-align:center;padding:8px 16px 2px;}
-.round-name{font-family:'Bangers',Impact,cursive;font-size:clamp(20px,4.5vw,30px);
-  color:#ffcb05;letter-spacing:2px;animation:slideDown .35s ease;}
-.round-info{font-family:monospace;font-size:8px;color:#8888aa;margin-top:3px;letter-spacing:1px;}
-.battle-hint{font-family:monospace;font-size:8px;color:#9999bb;text-align:center;margin:4px 0;letter-spacing:1px;}
-.battle-arena{display:flex;flex-direction:column;align-items:center;gap:0;
-  max-width:520px;margin:0 auto;padding:4px 0;}
-@media(min-width:600px){
-  .battle-arena{flex-direction:row;align-items:stretch;max-width:900px;gap:10px;}
-}
-.vs-col{display:flex;align-items:center;justify-content:center;padding:3px 0;flex-shrink:0;}
-.vs-text{font-family:'Bangers',Impact,cursive;font-size:clamp(26px,7vw,44px);
-  color:#ffcb05;text-shadow:3px 3px 0 #e3350d;animation:pulse 1.5s ease-in-out infinite;}
-.battle-controls{display:flex;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
-
-/* ── Type advantage bar ── */
-#type-adv-bar{text-align:center;font-family:monospace;font-size:8px;letter-spacing:1px;
-  padding:5px 14px;margin:3px auto;border-radius:20px;max-width:520px;
-  display:none;}
-
-/* ── Poke card ── */
-.poke-card{width:100%;max-width:520px;background:#13132a;color:#f0f0ff;
-  border:2px solid #252545;border-radius:16px;padding:10px 12px;
-  display:flex;flex-direction:row;align-items:center;gap:10px;
-  cursor:pointer;transition:border-color .25s,box-shadow .25s,opacity .25s,filter .25s;
-  position:relative;overflow:hidden;}
-@media(min-width:600px){
-  .poke-card{flex:1;max-width:420px;flex-direction:column;align-items:center;gap:6px;}
-}
-.poke-card::before{content:'';position:absolute;inset:0;background:var(--ac,#3b4cca);opacity:.05;pointer-events:none;}
-.poke-card.winner{border-color:#ffcb05 !important;border-width:3px !important;
-  box-shadow:0 0 40px rgba(255,203,5,.6) !important;animation:chosenPulse 1.5s ease infinite;}
-.poke-card.winner::after{content:'WINNER';position:absolute;top:8px;right:8px;
-  font-family:monospace;font-size:8px;font-weight:bold;color:#ffcb05;
-  background:rgba(0,0,0,.7);padding:3px 8px;border-radius:20px;
-  border:1px solid #ffcb05;letter-spacing:1px;}
-.poke-card.loser{opacity:.22;filter:grayscale(1);cursor:default;pointer-events:none;}
-.poke-card.locked{pointer-events:none;}
-.poke-card.p1-card{border-color:#F7D02C !important;}
-.poke-card.p2-card{border-color:#7AC74C !important;}
-
-/* ── Card contents ── */
-.poke-img-wrap{width:clamp(120px,36vw,170px);height:clamp(120px,36vw,170px);
-  flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;}
-@media(min-width:600px){.poke-img-wrap{width:clamp(110px,18vw,190px);height:clamp(110px,18vw,190px);}}
-.poke-img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;}
-.poke-info{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0;}
-@media(min-width:600px){.poke-info{align-items:center;}}
-.poke-num{font-family:monospace;font-size:7px;color:#6666aa;}
-.poke-name{font-family:monospace;font-size:clamp(9px,2vw,12px);text-transform:uppercase;letter-spacing:1px;color:#f0f0ff;}
-@media(min-width:600px){.poke-name{text-align:center;}}
-.poke-types{display:flex;gap:4px;flex-wrap:wrap;}
-@media(min-width:600px){.poke-types{justify-content:center;}}
-.type-badge{font-family:monospace;font-size:6px;padding:2px 6px;border-radius:20px;
-  border:1.5px solid rgba(255,255,255,.15);text-transform:uppercase;}
-.poke-stats{width:100%;display:flex;flex-direction:column;gap:2px;margin-top:3px;}
-.stat-row{display:flex;align-items:center;gap:4px;}
-.stat-lbl{font-family:monospace;font-size:6px;color:#8888aa;width:26px;text-align:right;flex-shrink:0;}
-.stat-bg{flex:1;height:5px;background:#060610;border-radius:3px;overflow:hidden;border:1px solid #1e1e3a;}
-.stat-fill{height:100%;border-radius:3px;width:0;transition:width .7s cubic-bezier(.34,1.56,.64,1);}
-.stat-num{font-family:monospace;font-size:6px;color:#aaaacc;width:20px;text-align:right;flex-shrink:0;}
-.poke-bst{font-family:monospace;font-size:7px;color:#8888aa;margin-top:1px;}
-.poke-bst span{color:#ffcb05;}
-.streak-badge{position:absolute;top:6px;left:6px;font-family:monospace;font-size:7px;
-  font-weight:bold;color:#fff;padding:2px 7px;border-radius:20px;z-index:3;
-  animation:streakGlow 1.2s ease infinite;}
-
-/* ── 2P banner ── */
-#two-player-banner{font-family:monospace;font-size:8px;letter-spacing:1px;
-  text-align:center;padding:5px;color:#fff;display:none;
-  background:linear-gradient(135deg,#3b4cca,#6390F0);}
-
-/* ── Picker ── */
-.picker-result{font-family:monospace;font-size:8px;color:#ffcb05;text-align:center;
-  padding:8px 16px;min-height:28px;line-height:1.8;}
-
-/* ── Bracket ── */
-#bracket-screen{padding:14px 14px 50px;}
-.bracket-head{text-align:center;margin-bottom:12px;}
-.bracket-head h2{font-family:'Bangers',Impact,cursive;font-size:clamp(20px,5vw,32px);
-  color:#ffcb05;letter-spacing:3px;text-shadow:3px 3px 0 #e3350d;}
-.b-round-nav{display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:10px;gap:8px;}
-.b-nav-btn{font-family:monospace;font-size:10px;padding:7px 14px;
-  background:#13132a;border:2px solid #252545;color:#9999bb;border-radius:10px;cursor:pointer;}
-.b-nav-btn:disabled{opacity:.3;cursor:default;}
-.b-round-title{font-family:'Bangers',Impact,cursive;font-size:22px;
-  color:#ffcb05;letter-spacing:2px;text-align:center;flex:1;}
-.b-matchup{display:flex;align-items:center;gap:8px;
-  background:#13132a;border:1px solid #252545;border-radius:12px;
-  padding:9px 12px;margin-bottom:7px;transition:border-color .2s;}
-.b-matchup.current{border-color:#3b4cca;}
-.b-slot{flex:1;display:flex;align-items:center;gap:7px;min-width:0;}
-.b-slot.won{opacity:1;}
-.b-slot.lost{opacity:.28;}
-.b-slot-img{width:34px;height:34px;object-fit:contain;image-rendering:pixelated;flex-shrink:0;}
-.b-slot-name{font-family:monospace;font-size:8px;text-transform:uppercase;
-  flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.b-slot-wins{font-family:monospace;font-size:7px;color:#ffcb05;flex-shrink:0;}
-.b-vs{font-family:'Bangers',Impact,cursive;font-size:14px;color:#444;flex-shrink:0;}
-.b-bye-note{font-family:monospace;font-size:8px;color:#444466;text-align:center;padding:8px;}
-
-/* ── Clash ── */
-#clash-screen{padding:0 10px 16px;}
-.clash-score{font-family:monospace;font-size:9px;margin:4px 0;color:#ccccee;text-align:center;}
-.clash-types-row{display:flex;gap:8px;justify-content:center;margin:6px 0;flex-wrap:wrap;align-items:center;}
-
-/* ── Champion ── */
-#champ-screen{flex-direction:column;align-items:center;padding:16px 16px 50px;gap:12px;}
-.confetti-row{font-size:clamp(18px,4vw,28px);letter-spacing:4px;}
-.champ-title{font-family:'Bangers',Impact,cursive;font-size:clamp(28px,7vw,52px);
-  color:#ffcb05;text-shadow:4px 4px 0 #e3350d;letter-spacing:4px;}
-.champ-sub{font-family:monospace;font-size:8px;color:#9999bb;}
-.champ-card{background:#13132a;border:3px solid #ffcb05;border-radius:20px;
-  padding:20px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;
-  box-shadow:0 0 50px rgba(255,203,5,.25);max-width:280px;width:100%;
-  animation:champPop .6s cubic-bezier(.175,.885,.32,1.275);}
-.champ-img{width:clamp(110px,25vw,160px);height:clamp(110px,25vw,160px);
-  object-fit:contain;image-rendering:pixelated;
-  filter:drop-shadow(0 0 18px rgba(255,203,5,.5));animation:float 3s ease-in-out infinite;}
-.champ-name{font-family:'Bangers',Impact,cursive;font-size:clamp(22px,5vw,36px);letter-spacing:3px;}
-.champ-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
-.champ-btn-pri{font-family:monospace;font-size:8px;padding:10px 18px;border-radius:50px;
-  cursor:pointer;color:#fff;border:none;letter-spacing:1px;
-  background:linear-gradient(135deg,#e3350d,#b02a09);box-shadow:0 4px 0 #6b1500;}
-.champ-btn-sec{font-family:monospace;font-size:8px;padding:10px 18px;border-radius:50px;
-  cursor:pointer;background:transparent;border:2px solid #444466;color:#9999bb;letter-spacing:1px;}
-
-/* ── Hall of Fame ── */
-#hof-screen{padding:16px 14px 50px;}
-.hof-entry{display:flex;align-items:center;gap:10px;
-  background:#13132a;border:1px solid #252545;border-radius:12px;
-  padding:9px 12px;margin-bottom:7px;animation:hofEntry .3s ease both;}
-.hof-rank{font-family:'Bangers',Impact,cursive;font-size:20px;color:#ffcb05;width:28px;text-align:center;flex-shrink:0;}
-.hof-img{width:44px;height:44px;object-fit:contain;image-rendering:pixelated;flex-shrink:0;}
-.hof-info{flex:1;min-width:0;}
-.hof-name{font-family:monospace;font-size:9px;color:#f0f0ff;text-transform:uppercase;letter-spacing:1px;}
-.hof-meta{font-family:monospace;font-size:7px;color:#6666aa;margin-top:2px;}
-.hof-bst{font-family:monospace;font-size:8px;color:#ffcb05;flex-shrink:0;text-align:right;}
-
-/* ── Stage Backgrounds ── */
-#battle-screen{position:relative;transition:background 1.2s ease;}
-#battle-screen::before{content:'';position:absolute;inset:0;z-index:-1;opacity:.55;
-  background:var(--stage-bg,radial-gradient(ellipse at center,#1a1a35,#0b0b18));
-  transition:background 1.2s ease,opacity 1.2s ease;}
-#battle-screen::after{content:'';position:absolute;inset:0;z-index:-1;
-  background:var(--stage-overlay,none);opacity:.4;pointer-events:none;}
-.stage-r1{
-  --stage-bg:radial-gradient(ellipse at 30% 80%,#1a4d2e 0%,#0a1a14 60%);
-  --stage-overlay:radial-gradient(circle at 80% 20%,rgba(122,199,76,.15),transparent 50%);}
-.stage-r2{
-  --stage-bg:linear-gradient(180deg,#3a2a1a 0%,#0d0805 70%);
-  --stage-overlay:radial-gradient(circle at 20% 30%,rgba(230,126,34,.18),transparent 50%);}
-.stage-r3{
-  --stage-bg:linear-gradient(180deg,#2a3a55 0%,#0b1020 80%);
-  --stage-overlay:radial-gradient(ellipse at 50% 10%,rgba(99,144,240,.2),transparent 60%);}
-.stage-r4{
-  --stage-bg:radial-gradient(ellipse at center,#3a1f4e 0%,#0a0518 70%);
-  --stage-overlay:radial-gradient(circle at 50% 50%,rgba(155,89,182,.25),transparent 40%);}
-.stage-final{
-  --stage-bg:radial-gradient(ellipse at center,#553a0a 0%,#3b1f00 50%,#0a0500 100%);
-  --stage-overlay:radial-gradient(circle at 50% 0%,rgba(255,203,5,.3),transparent 50%);}
-
-/* ── 2 Player Mode ── */
-.two-p-bar{display:none;padding:6px 12px;background:rgba(11,11,24,.95);
-  border-bottom:2px solid #252545;text-align:center;}
-.two-p-scores{display:flex;align-items:center;justify-content:center;gap:16px;}
-.two-p-name{font-family:'Bangers',Impact,cursive;font-size:22px;letter-spacing:2px;}
-.two-p-pts{font-family:monospace;font-size:10px;letter-spacing:1px;}
-.two-p-sep{font-family:'Bangers',Impact,cursive;font-size:18px;color:#444;}
-.two-p-turn{font-family:monospace;font-size:8px;letter-spacing:2px;
-  margin-top:3px;color:#9999bb;}
-.p1-card{border-color:#6390F0 !important;}
-.p2-card{border-color:#7AC74C !important;}
-.final-card{border-color:#ffcb05 !important;
-  box-shadow:0 0 30px rgba(255,203,5,.4) !important;}
-.two-p-final-banner{font-family:'Bangers',Impact,cursive;
-  font-size:clamp(20px,5vw,32px);color:#ffcb05;letter-spacing:3px;
-  text-shadow:3px 3px 0 #e3350d;text-align:center;padding:8px 0;}
-
-/* ── Stats screen ── */
-#stats-screen{padding:16px 14px 50px;}
-.stat-card{background:#13132a;border:1px solid #252545;border-radius:12px;padding:12px 14px;margin-bottom:8px;}
-.stat-card-label{font-family:monospace;font-size:7px;color:#6666aa;letter-spacing:1px;margin-bottom:4px;}
-.stat-card-val{font-family:'Bangers',Impact,cursive;font-size:26px;color:#ffcb05;line-height:1.1;}
-.stat-card-sub{font-family:monospace;font-size:8px;color:#9999bb;margin-top:3px;}
-</style>
-
 <div id="app-root">
 
-<!-- ── FIXED OVERLAYS (all hidden by default) ── -->
-<div id="pick-flash" style="display:none"></div>
+<div id="pick-flash"></div>
 <div id="round-transition">
-  <div class="trans-pokeball"></div>
-  <div class="trans-label" id="trans-label">NEXT ROUND!</div>
-  <div class="trans-sub">LOADING NEXT BATTLE...</div>
+  <div class="load-orb"></div>
+  <div class="trans-label" id="trans-label">Next Round</div>
+  <div class="trans-sub">Preparing the arena…</div>
 </div>
-<div id="upset-banner" style="display:none">
-  <div class="upset-text">UPSET!</div>
-</div>
-<div id="two-player-banner"></div>
-<div id="type-adv-bar"></div>
+<div id="upset-banner"><div class="upset-text">UPSET!</div></div>
 
-<!-- ── HEADER (shown on all screens) ── -->
-<header>
-  <div class="game-title">&#9889; POKEMON ULTIMATE &#9889;</div>
-  <div class="game-sub">GEN 1-4 &middot; 4 WAYS TO PLAY</div>
+<header class="app-chrome hidden" id="app-chrome">
+  <div class="brand-mark" onclick="go('home-screen')">Pokémon <span>Ultimate</span></div>
+  <div class="chrome-actions">
+    <button class="btn btn-ghost" onclick="openHOF()">Hall of Fame</button>
+    <button class="btn btn-ghost" onclick="openStats()">Stats</button>
+  </div>
 </header>
 
-<!-- ══════════════════════════════════ HOME ══════════════════════════════════ -->
+<!-- HOME -->
 <div id="home-screen" class="screen active">
-  <div class="mode-grid">
-    <div class="mode-card" style="--mc:#F7D02C" onclick="go('pickerSetup')">
-      <div class="mode-icon">&#127922;</div>
-      <div class="mode-name" style="color:#F7D02C">RANDOM PICKER</div>
-      <div class="mode-desc">Two random Pokemon face off! See who has the edge.</div>
-      <div class="mode-badge" style="color:#F7D02C;border-color:#F7D02C">2 POKEMON &middot; INSTANT</div>
+  <section class="hero" id="hero">
+    <div class="hero-stage" aria-hidden="true"></div>
+    <div class="hero-fighters" aria-hidden="true">
+      <img id="hero-left" alt="" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/6.gif" onerror="this.style.display='none'">
+      <img id="hero-right" class="right" alt="" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/150.gif" onerror="this.style.display='none'">
     </div>
-    <div class="mode-card" style="--mc:#EE8130" onclick="go('miniSetup')">
-      <div class="mode-icon">&#127942;</div>
-      <div class="mode-name" style="color:#EE8130">MINI TOURNAMENT</div>
-      <div class="mode-desc">8-64 fighters in a bracket. You pick every winner!</div>
-      <div class="mode-badge" style="color:#EE8130;border-color:#EE8130">8-64 &middot; BRACKET</div>
+    <div class="hero-content">
+      <h1 class="hero-brand">Pokémon<em>Ultimate</em></h1>
+      <p class="hero-line">A championship arena where living sprites collide — and you crown the legend.</p>
+      <div class="hero-cta">
+        <a class="btn btn-gold" href="#modes" onclick="document.getElementById('modes').scrollIntoView({behavior:'smooth'});return false;">Enter the Arena</a>
+        <button class="btn btn-ghost" onclick="openHOF()">Hall of Fame</button>
+      </div>
+      <div class="hero-scroll">Gen 1–4 · Four ways to play</div>
     </div>
-    <div class="mode-card" style="--mc:#6390F0" onclick="go('megaSetup')">
-      <div class="mode-icon">&#127758;</div>
-      <div class="mode-name" style="color:#6390F0">MEGA TOURNAMENT</div>
-      <div class="mode-desc">Every Pokemon from chosen gens in one massive bracket!</div>
-      <div class="mode-badge" style="color:#6390F0;border-color:#6390F0">UP TO 554 &middot; EPIC</div>
+  </section>
+
+  <section class="modes" id="modes">
+    <div id="resume-slot"></div>
+    <div class="modes-head">
+      <div>
+        <h2>Choose your battlefield</h2>
+        <p>Same tournaments. Entirely new stage.</p>
+      </div>
     </div>
-    <div class="mode-card" style="--mc:#7AC74C" onclick="go('clashSetup')">
-      <div class="mode-icon">&#128293;</div>
-      <div class="mode-name" style="color:#7AC74C">TYPE CLASH</div>
-      <div class="mode-desc">Pick two types — best of 3, 5, 7 or ALL rounds!</div>
-      <div class="mode-badge" style="color:#7AC74C;border-color:#7AC74C">TYPE VS TYPE</div>
+    <div class="mode-grid">
+      <div class="mode-tile" style="--accent:#f0c14b" onclick="go('pickerSetup')">
+        <div class="mode-kicker">Instant duel</div>
+        <h3>Random Picker</h3>
+        <p>Two random Pokémon face off. Tap the one that deserves the win.</p>
+      </div>
+      <div class="mode-tile" style="--accent:#ee8130" onclick="go('miniSetup')">
+        <div class="mode-kicker">8–64 bracket</div>
+        <h3>Mini Tournament</h3>
+        <p>Build a heated bracket and pick every winner through the final.</p>
+      </div>
+      <div class="mode-tile" style="--accent:#7ec8ff" onclick="go('megaSetup')">
+        <div class="mode-kicker">Up to 554</div>
+        <h3>Mega Tournament</h3>
+        <p>Every Pokémon from your gens in one massive championship run.</p>
+      </div>
+      <div class="mode-tile" style="--accent:#3dcf8e" onclick="go('clashSetup')">
+        <div class="mode-kicker">Type vs type</div>
+        <h3>Type Clash</h3>
+        <p>Best of 3, 5, 7 — or every fighter until one type reigns.</p>
+      </div>
     </div>
-  </div>
-  <div class="home-footer">
-    <button class="back-btn" onclick="openHOF()">&#127942; HALL OF FAME</button>
-    <button class="back-btn" onclick="openStats()">&#128202; STATS</button>
-  </div>
-  <div style="text-align:center;padding:4px 0 8px">
-    <div id="cache-count" style="font-family:monospace;font-size:8px;color:#333355;letter-spacing:1px">PLAY ONCE ONLINE TO CACHE POKEMON OFFLINE</div>
-  </div>
+    <div class="home-tools">
+      <button class="btn" onclick="openHOF()">Hall of Fame</button>
+      <button class="btn" onclick="openStats()">Career Stats</button>
+    </div>
+    <div class="cache-note" id="cache-count">Play once online to cache Pokémon offline</div>
+  </section>
 </div>
 
-<!-- ══════════════════════════════════ PICKER SETUP ══════════════════════════════════ -->
+<!-- PICKER SETUP -->
 <div id="pickerSetup" class="screen">
   <div class="setup-wrap">
-    <div class="setup-title" style="color:#F7D02C">RANDOM PICKER</div>
-    <div class="filter-label">GENERATIONS</div>
+    <div class="setup-title" style="color:#f0c14b">Random Picker</div>
+    <div class="setup-sub">Dial in the pool, then drop into the arena.</div>
+    <div class="filter-label">Generations</div>
     <div class="gen-row" id="ps-gens"></div>
-    <div class="filter-label">TYPE FILTER (OPTIONAL)</div>
+    <div class="filter-label">Type filter (optional)</div>
     <div class="type-grid" id="ps-types"></div>
     <div id="ps-mega"></div>
     <div class="setup-btns">
-      <button class="action-btn" style="background:linear-gradient(135deg,#e3350d,#b02a09);box-shadow:0 4px 0 #6b1500" onclick="launchPicker()">&#127922; PICK POKEMON!</button>
-      <button class="back-btn" onclick="go('home-screen')">HOME</button>
+      <button class="btn btn-primary" onclick="launchPicker()">Start Duel</button>
+      <button class="btn btn-ghost" onclick="go('home-screen')">Home</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════ PICKER BATTLE ══════════════════════════════════ -->
+<!-- PICKER BATTLE -->
 <div id="pickerBattle" class="screen">
-  <div style="text-align:center;padding:12px 16px 0">
-    <div style="font-family:'Bangers',Impact,cursive;font-size:26px;color:#F7D02C;letter-spacing:2px">RANDOM PICKER</div>
-    <div class="battle-hint">TAP YOUR FAVOURITE!</div>
-  </div>
-  <div class="battle-arena">
-    <div class="poke-card locked" id="pick-a"></div>
-    <div class="vs-col"><div class="vs-text">VS</div></div>
-    <div class="poke-card locked" id="pick-b"></div>
-  </div>
-  <div class="picker-result" id="picker-result"></div>
-  <div class="setup-btns">
-    <button class="action-btn" style="background:linear-gradient(135deg,#e3350d,#b02a09);box-shadow:0 4px 0 #6b1500" onclick="launchPicker()">NEW PICKS!</button>
-    <button class="back-btn" onclick="go('home-screen')">HOME</button>
+  <div class="battle-shell">
+    <div class="round-banner">
+      <div class="round-name" style="color:#f0c14b">Random Picker</div>
+      <div class="battle-hint">Tap your favourite</div>
+    </div>
+    <div class="arena" id="picker-arena">
+      <div class="arena-bg"></div>
+      <div class="arena-lights"><span></span><span></span></div>
+      <div class="arena-ground"></div>
+      <div class="impact-ring"></div>
+      <div class="arena-field">
+        <div class="fighter fighter-a locked" id="pick-a" tabindex="0"></div>
+        <div class="vs-col"><div class="vs-text">VS</div></div>
+        <div class="fighter fighter-b locked" id="pick-b" tabindex="0"></div>
+      </div>
+    </div>
+    <div class="picker-result" id="picker-result"></div>
+    <div class="setup-btns">
+      <button class="btn btn-primary" onclick="launchPicker()">New Picks</button>
+      <button class="btn btn-ghost" onclick="go('home-screen')">Home</button>
+    </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════ MINI SETUP ══════════════════════════════════ -->
+<!-- MINI SETUP -->
 <div id="miniSetup" class="screen">
   <div class="setup-wrap">
-    <div class="setup-title" style="color:#7AC74C">MINI TOURNAMENT</div>
-    <div class="filter-label">SIZE</div>
+    <div class="setup-title" style="color:#ee8130">Mini Tournament</div>
+    <div class="setup-sub">A sharp bracket. You call every fight.</div>
+    <div class="filter-label">Size</div>
     <div class="size-row" id="mini-sizes"></div>
-    <div class="filter-label">GENERATIONS</div>
+    <div class="filter-label">Generations</div>
     <div class="gen-row" id="ms-gens"></div>
-    <div class="filter-label">TYPE FILTER (OPTIONAL)</div>
+    <div class="filter-label">Type filter (optional)</div>
     <div class="type-grid" id="ms-types"></div>
     <div id="ms-mega"></div>
     <div class="setup-btns">
-      <button class="action-btn" style="background:linear-gradient(135deg,#EE8130,#c06010);box-shadow:0 4px 0 #7b3500" onclick="launchMini()">&#127942; START!</button>
-      <button class="back-btn" onclick="go('home-screen')">HOME</button>
+      <button class="btn btn-primary" onclick="launchMini()">Start Tournament</button>
+      <button class="btn btn-ghost" onclick="go('home-screen')">Home</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════ MEGA SETUP ══════════════════════════════════ -->
+<!-- MEGA SETUP -->
 <div id="megaSetup" class="screen">
   <div class="setup-wrap">
-    <div class="setup-title" style="color:#6390F0">MEGA TOURNAMENT</div>
-    <div style="font-family:monospace;font-size:8px;color:#9999bb;text-align:center;margin-bottom:12px;line-height:2;letter-spacing:1px">ALL MATCHING POKEMON IN ONE GIANT BRACKET</div>
-    <div class="filter-label">GENERATIONS</div>
+    <div class="setup-title" style="color:#7ec8ff">Mega Tournament</div>
+    <div class="setup-sub">All matching Pokémon in one giant bracket.</div>
+    <div class="filter-label">Generations</div>
     <div class="gen-row" id="xs-gens"></div>
-    <div class="filter-label">TYPE FILTER (OPTIONAL)</div>
+    <div class="filter-label">Type filter (optional)</div>
     <div class="type-grid" id="xs-types"></div>
     <div id="xs-mega"></div>
-    <div style="text-align:center;margin-top:8px"><div class="info-badge" id="mega-count">SELECT FILTERS ABOVE</div></div>
+    <div style="text-align:center"><div class="info-badge" id="mega-count">Select filters above</div></div>
     <div class="setup-btns">
-      <button class="action-btn" style="background:linear-gradient(135deg,#6390F0,#3b5cc0);box-shadow:0 4px 0 #1a2a80" onclick="launchMega()">&#127758; START MEGA TOURNAMENT!</button>
-      <button class="back-btn" onclick="go('home-screen')">HOME</button>
+      <button class="btn btn-primary" onclick="launchMega()">Start Mega Tournament</button>
+      <button class="btn btn-ghost" onclick="go('home-screen')">Home</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════ CLASH SETUP ══════════════════════════════════ -->
+<!-- CLASH SETUP -->
 <div id="clashSetup" class="screen">
   <div class="setup-wrap">
-    <div class="setup-title" style="color:#7AC74C">TYPE CLASH</div>
-    <div class="filter-label">TYPE A</div>
+    <div class="setup-title" style="color:#3dcf8e">Type Clash</div>
+    <div class="setup-sub">Two types. One scoreboard. Pure rivalry.</div>
+    <div class="filter-label">Type A</div>
     <div class="type-grid" id="ca-types"></div>
-    <div class="filter-label">TYPE B</div>
+    <div class="filter-label">Type B</div>
     <div class="type-grid" id="cb-types"></div>
-    <div class="filter-label">GENERATIONS</div>
+    <div class="filter-label">Generations</div>
     <div class="gen-row" id="cc-gens"></div>
     <div id="cc-mega"></div>
-    <div class="filter-label">ROUNDS</div>
+    <div class="filter-label">Rounds</div>
     <div class="size-row" id="clash-rounds"></div>
-    <div id="clash-warn" style="font-family:monospace;font-size:8px;color:#ff8888;text-align:center;margin-top:6px;min-height:16px"></div>
+    <div id="clash-warn" style="font-size:12px;color:#ff8a80;text-align:center;margin-top:8px;min-height:18px"></div>
     <div class="setup-btns">
-      <button class="action-btn" id="clash-start-btn" style="background:linear-gradient(135deg,#7AC74C,#4a9720);box-shadow:0 4px 0 #1a5000" onclick="launchClash()" disabled>&#128293; START TYPE CLASH!</button>
-      <button class="back-btn" onclick="go('home-screen')">HOME</button>
+      <button class="btn btn-primary" id="clash-start-btn" onclick="launchClash()" disabled>Start Type Clash</button>
+      <button class="btn btn-ghost" onclick="go('home-screen')">Home</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════ LOADING ══════════════════════════════════ -->
+<!-- LOADING -->
 <div id="loading-screen" class="screen">
-  <div class="pokeball"></div>
-  <div class="load-text" id="load-text">LOADING...</div>
+  <div class="load-orb"></div>
+  <div class="load-text" id="load-text">Loading…</div>
   <div class="load-prog"><div class="load-bar" id="load-bar"></div></div>
 </div>
 
-<!-- ══════════════════════════════════ BATTLE ══════════════════════════════════ -->
-<!-- 2P score bar — shown above battle when 2P active -->
+<!-- 2P BAR -->
 <div id="two-p-bar" class="two-p-bar">
   <div class="two-p-scores">
     <div>
-      <span class="two-p-name" style="color:#6390F0" id="two-p-p1-name">PLAYER 1</span>
-      <span class="two-p-pts" style="color:#6390F0"> &nbsp;<span id="two-p-p1-pts">0</span> pts</span>
+      <span class="two-p-name" style="color:#7ec8ff" id="two-p-p1-name">PLAYER 1</span>
+      <span class="two-p-pts" style="color:#7ec8ff"> · <span id="two-p-p1-pts">0</span> pts</span>
     </div>
     <div class="two-p-sep">|</div>
     <div>
-      <span class="two-p-name" style="color:#7AC74C" id="two-p-p2-name">PLAYER 2</span>
-      <span class="two-p-pts" style="color:#7AC74C"> &nbsp;<span id="two-p-p2-pts">0</span> pts</span>
+      <span class="two-p-name" style="color:#3dcf8e" id="two-p-p2-name">PLAYER 2</span>
+      <span class="two-p-pts" style="color:#3dcf8e"> · <span id="two-p-p2-pts">0</span> pts</span>
     </div>
   </div>
-  <div class="two-p-turn" id="two-p-turn">PLAYER 1'S TURN</div>
+  <div class="two-p-turn" id="two-p-turn">Player 1's turn</div>
 </div>
+
+<!-- BATTLE -->
 <div id="battle-screen" class="screen">
-  <div class="round-banner">
-    <div class="round-name" id="round-name">QUARTER-FINALS</div>
-    <div class="round-info" id="round-info">MATCH 1 OF 4</div>
-  </div>
-  <div class="battle-hint" id="battle-hint">TAP A POKEMON TO PICK THE WINNER!</div>
-  <div id="type-adv-bar"></div>
-  <div class="battle-arena">
-    <div class="poke-card" id="fighter-a" onclick="pickWinner('a')"></div>
-    <div class="vs-col"><div class="vs-text">VS</div></div>
-    <div class="poke-card" id="fighter-b" onclick="pickWinner('b')"></div>
-  </div>
-  <div class="battle-controls" id="battle-controls">
-    <button class="back-btn" onclick="viewBracket()">BRACKET</button>
-    <button class="back-btn" id="two-p-btn" onclick="toggle2Player()">2P MODE</button>
-    <button class="back-btn" id="audio-btn" onclick="toggleAudio()">SOUND ON</button>
-    <button class="back-btn" onclick="go('home-screen')">HOME</button>
+  <div class="battle-shell">
+    <div class="round-banner">
+      <div class="round-name" id="round-name">Quarter-Finals</div>
+      <div class="round-info" id="round-info">Match 1 of 4</div>
+    </div>
+    <div class="battle-hint" id="battle-hint">Tap a Pokémon to pick the winner</div>
+    <div id="type-adv-bar"></div>
+    <div class="arena" id="battle-arena">
+      <div class="arena-bg"></div>
+      <div class="arena-lights"><span></span><span></span></div>
+      <div class="arena-ground"></div>
+      <div class="impact-ring"></div>
+      <div class="arena-field">
+        <div class="fighter fighter-a" id="fighter-a" tabindex="0" onclick="pickWinner('a')"></div>
+        <div class="vs-col"><div class="vs-text">VS</div></div>
+        <div class="fighter fighter-b" id="fighter-b" tabindex="0" onclick="pickWinner('b')"></div>
+      </div>
+    </div>
+    <div class="battle-controls" id="battle-controls">
+      <button class="btn btn-ghost" onclick="viewBracket()">Bracket</button>
+      <button class="btn btn-ghost" id="two-p-btn" onclick="toggle2Player()">2P Mode</button>
+      <button class="btn btn-ghost" id="audio-btn" onclick="toggleAudio()">Sound On</button>
+      <button class="btn btn-ghost" onclick="go('home-screen')">Home</button>
+    </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════ BRACKET ══════════════════════════════════ -->
+<!-- BRACKET -->
 <div id="bracket-screen" class="screen">
-  <div class="bracket-head"><h2>TOURNAMENT BRACKET</h2></div>
+  <div class="bracket-head"><h2>Tournament Bracket</h2></div>
   <div id="bracket-inner"></div>
-  <div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-    <button class="back-btn" id="bracket-back-btn">BACK</button>
-    <button class="back-btn" onclick="go('home-screen')">HOME</button>
+  <div class="footer-row">
+    <button class="btn btn-ghost" id="bracket-back-btn">Back</button>
+    <button class="btn btn-ghost" onclick="go('home-screen')">Home</button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════ CLASH BATTLE ══════════════════════════════════ -->
+<!-- CLASH BATTLE -->
 <div id="clash-screen" class="screen">
-  <div style="text-align:center;padding:10px 16px 2px">
-    <div style="font-family:'Bangers',Impact,cursive;font-size:24px;color:#7AC74C;letter-spacing:2px">TYPE CLASH</div>
-    <div class="clash-score" id="clash-score"></div>
-    <div class="clash-types-row" id="clash-types-row"></div>
-  </div>
-  <div class="battle-arena">
-    <div class="poke-card" id="clash-a" onclick="handleClashPick('a')"></div>
-    <div class="vs-col"><div class="vs-text">VS</div></div>
-    <div class="poke-card" id="clash-b" onclick="handleClashPick('b')"></div>
-  </div>
-  <div class="battle-hint" id="clash-hint">TAP YOUR FAVOURITE TO WIN THE ROUND!</div>
-  <div class="setup-btns">
-    <button class="back-btn" onclick="go('home-screen')">HOME</button>
+  <div class="battle-shell">
+    <div class="round-banner">
+      <div class="round-name" style="color:#3dcf8e">Type Clash</div>
+      <div class="clash-score" id="clash-score"></div>
+      <div class="clash-types-row" id="clash-types-row"></div>
+    </div>
+    <div class="arena stage-r1" id="clash-arena">
+      <div class="arena-bg"></div>
+      <div class="arena-lights"><span></span><span></span></div>
+      <div class="arena-ground"></div>
+      <div class="impact-ring"></div>
+      <div class="arena-field">
+        <div class="fighter fighter-a" id="clash-a" tabindex="0" onclick="handleClashPick('a')"></div>
+        <div class="vs-col"><div class="vs-text">VS</div></div>
+        <div class="fighter fighter-b" id="clash-b" tabindex="0" onclick="handleClashPick('b')"></div>
+      </div>
+    </div>
+    <div class="battle-hint" id="clash-hint">Tap your favourite to win the round</div>
+    <div class="setup-btns">
+      <button class="btn btn-ghost" onclick="go('home-screen')">Home</button>
+    </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════ CHAMPION ══════════════════════════════════ -->
+<!-- CHAMPION -->
 <div id="champ-screen" class="screen">
-  <div class="confetti-row">&#127881; &#127942; &#127881;</div>
-  <div class="champ-title" id="champ-title">CHAMPION!</div>
-  <div class="champ-sub" id="champ-sub">TOURNAMENT WINNER</div>
+  <div class="champ-title" id="champ-title">Champion!</div>
+  <div class="champ-sub" id="champ-sub">Tournament Winner</div>
   <div class="champ-card" id="champ-card"></div>
   <div class="champ-btns" id="champ-btns"></div>
 </div>
 
-<!-- ══════════════════════════════════ VAULT DETAIL ══════════════════════════════════ -->
+<!-- VAULT -->
 <div id="vault-screen" class="screen">
-  <div style="padding:16px 14px 50px">
-    <div id="vault-detail"></div>
-    <div style="text-align:center;margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-      <button class="back-btn" onclick="go('hof-screen');renderHOF()">BACK TO HOF</button>
-      <button class="back-btn" onclick="go('home-screen')">HOME</button>
-    </div>
+  <div id="vault-detail"></div>
+  <div class="footer-row">
+    <button class="btn btn-ghost" onclick="go('hof-screen');renderHOF()">Back to Hall</button>
+    <button class="btn btn-ghost" onclick="go('home-screen')">Home</button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════ HALL OF FAME ══════════════════════════════════ -->
+<!-- HOF -->
 <div id="hof-screen" class="screen">
-  <div style="text-align:center;padding:0 14px 12px">
-    <div style="font-family:'Bangers',Impact,cursive;font-size:clamp(26px,6vw,42px);color:#ffcb05;letter-spacing:3px;text-shadow:3px 3px 0 #e3350d">HALL OF FAME</div>
-    <div style="font-family:monospace;font-size:8px;color:#6666aa;margin-top:3px;letter-spacing:1px">PAST CHAMPIONS</div>
-  </div>
-  <div id="hof-list" style="padding:0 14px"></div>
-  <div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding-bottom:40px">
-    <button class="back-btn" onclick="go('home-screen')">HOME</button>
-    <button class="back-btn" style="color:#e3350d;border-color:#e3350d" onclick="clearHOF()">CLEAR</button>
+  <h2 class="section-title">Hall of Fame</h2>
+  <div class="section-sub">Past champions</div>
+  <div id="hof-list"></div>
+  <div class="footer-row">
+    <button class="btn btn-ghost" onclick="go('home-screen')">Home</button>
+    <button class="btn btn-danger" onclick="clearHOF()">Clear</button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════ STATS ══════════════════════════════════ -->
+<!-- STATS -->
 <div id="stats-screen" class="screen">
-  <div style="text-align:center;padding:0 14px 12px">
-    <div style="font-family:'Bangers',Impact,cursive;font-size:clamp(26px,6vw,42px);color:#ffcb05;letter-spacing:3px;text-shadow:3px 3px 0 #e3350d">MY STATS</div>
-  </div>
-  <div id="stats-list" style="padding:0 14px"></div>
-  <div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center;padding-bottom:40px">
-    <button class="back-btn" onclick="go('home-screen')">HOME</button>
-    <button class="back-btn" style="color:#e3350d;border-color:#e3350d" onclick="clearStats()">CLEAR</button>
+  <h2 class="section-title">Career Stats</h2>
+  <div class="section-sub">Your arena record</div>
+  <div id="stats-list"></div>
+  <div class="footer-row">
+    <button class="btn btn-ghost" onclick="go('home-screen')">Home</button>
+    <button class="btn btn-danger" onclick="clearStats()">Clear</button>
   </div>
 </div>
 
-</div><!-- end app-root -->
+</div><!-- app-root -->
 
-<!-- ══════════════════════════════════ MAIN JS ══════════════════════════════════ -->
-<script>
-// ─────────────────────────────────────────
-// 1. CONSTANTS
-// ─────────────────────────────────────────
-var GEN_RANGES = {1:[1,151],2:[152,251],3:[252,386],4:[387,493]};
-var ALL_TYPES = ['normal','fire','water','electric','grass','ice','fighting',
-  'poison','ground','flying','psychic','bug','rock','ghost','dragon','dark','steel','fairy'];
-var TYPE_EMOJI = {
-  normal:'&#9898;',fire:'&#128293;',water:'&#128167;',electric:'&#9889;',
-  grass:'&#127807;',ice:'&#10052;',fighting:'&#129354;',poison:'&#9760;',
-  ground:'&#127758;',flying:'&#127754;',psychic:'&#128302;',bug:'&#128027;',
-  rock:'&#129704;',ghost:'&#128123;',dragon:'&#128009;',dark:'&#127761;',
-  steel:'&#9881;',fairy:'&#10024;'
-};
-var TC = {
-  normal:'#A8A77A',fire:'#7AC74C',water:'#6390F0',electric:'#F7D02C',
-  grass:'#7AC74C',ice:'#96D9D6',fighting:'#C22E28',poison:'#A33EA1',
-  ground:'#E2BF65',flying:'#A98FF3',psychic:'#F95587',bug:'#A6B91A',
-  rock:'#B6A136',ghost:'#735797',dragon:'#6F35FC',dark:'#705746',
-  steel:'#B7B7CE',fairy:'#D685AD'
-};
-var SC = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6'];
-var SL = ['HP','ATK','DEF','SPA','SPD','SPE'];
-var TYPE_CHART = {
-  fire:['grass','bug','steel','ice'],water:['fire','ground','rock'],
-  grass:['water','ground','rock'],electric:['water','flying'],
-  ice:['grass','ground','flying','dragon'],fighting:['normal','rock','steel','ice','dark'],
-  poison:['grass','fairy'],ground:['fire','electric','poison','rock','steel'],
-  flying:['grass','fighting','bug'],psychic:['fighting','poison'],
-  bug:['grass','psychic','dark'],rock:['fire','ice','flying','bug'],
-  ghost:['psychic','ghost'],dragon:['dragon'],dark:['psychic','ghost'],
-  steel:['ice','rock','fairy'],fairy:['fighting','dragon','dark']
-};
-var MEGA_NAMES = [
-  'venusaur-mega','charizard-mega-x','charizard-mega-y','blastoise-mega',
-  'alakazam-mega','gengar-mega','kangaskhan-mega','pinsir-mega','gyarados-mega',
-  'aerodactyl-mega','mewtwo-mega-x','mewtwo-mega-y','ampharos-mega','scizor-mega',
-  'heracross-mega','houndoom-mega','tyranitar-mega','blaziken-mega','gardevoir-mega',
-  'mawile-mega','aggron-mega','medicham-mega','manectric-mega','banette-mega',
-  'absol-mega','latias-mega','latios-mega','salamence-mega','metagross-mega',
-  'rayquaza-mega','sceptile-mega','swampert-mega','sharpedo-mega','camerupt-mega',
-  'glalie-mega','pidgeot-mega','slowbro-mega','steelix-mega','lucario-mega',
-  'garchomp-mega','abomasnow-mega','gallade-mega','audino-mega','lopunny-mega',
-  'kyogre-primal','groudon-primal','deoxys-attack','deoxys-defense','deoxys-speed',
-  'giratina-origin','shaymin-sky','rotom-heat','rotom-wash','rotom-frost',
-  'rotom-fan','rotom-mow','castform-sunny','castform-rainy','castform-snowy',
-  'wormadam-sandy','wormadam-trash'
-];
-
-// ─────────────────────────────────────────
-// 2. FETCH & CACHE
-// ─────────────────────────────────────────
-var _pokeCache = {};
-function fetchPoke(id) {
-  if (_pokeCache[id]) return Promise.resolve(_pokeCache[id]);
-  var attempts = 0;
-  function tryFetch() {
-    return fetch('https://pokeapi.co/api/v2/pokemon/' + id)
-      .then(function(r) {
-        if (!r.ok) throw new Error(r.status);
-        return r.json();
-      })
-      .then(function(d) { _pokeCache[id] = d; return d; })
-      .catch(function(e) {
-        attempts++;
-        if (attempts >= 3) throw e;
-        return new Promise(function(res) { setTimeout(res, 500 * attempts); }).then(tryFetch);
-      });
-  }
-  return tryFetch();
-}
-function imgUrl(id) {
-  return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + id + '.png';
-}
-function imgFb(id) {
-  return 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + id + '.png';
-}
-function allIds(genSet) {
-  var ids = [];
-  genSet.forEach(function(g) {
-    var r = GEN_RANGES[g];
-    for (var i = r[0]; i <= r[1]; i++) ids.push(i);
-  });
-  return ids;
-}
-function shuffle(arr) {
-  var a = arr.slice();
-  for (var i = a.length - 1; i > 0; i--) {
-    var j = Math.floor(Math.random() * (i + 1));
-    var t = a[i]; a[i] = a[j]; a[j] = t;
-  }
-  return a;
-}
-function bst(stats) { return stats.reduce(function(s, x) { return s + x.base_stat; }, 0); }
-function genLbl(id) {
-  var keys = Object.keys(GEN_RANGES);
-  for (var i = 0; i < keys.length; i++) {
-    var r = GEN_RANGES[keys[i]];
-    if (id >= r[0] && id <= r[1]) return ['I','II','III','IV'][keys[i]-1];
-  }
-  return 'MEGA';
-}
-function cleanName(name) {
-  if (!name) return '';
-  var p = name.split('-');
-  if (p.length > 1 && p[p.length-1] === 'mega') return 'MEGA ' + p.slice(0,-1).join(' ').toUpperCase();
-  if (p.length > 1 && p[1] === 'mega') return 'MEGA ' + p[0].toUpperCase() + (p[2] ? ' ' + p[2].toUpperCase() : '');
-  if (p.length > 1 && p[p.length-1] === 'primal') return 'PRIMAL ' + p.slice(0,-1).join(' ').toUpperCase();
-  return p.join(' ').toUpperCase();
-}
-function fetchMegaPool(typeSet) {
-  var result = []; var promise = Promise.resolve();
-  var B = 6;
-  for (var i = 0; i < MEGA_NAMES.length; i += B) {
-    (function(batch) {
-      promise = promise.then(function() {
-        return Promise.all(batch.map(function(name) {
-          return fetchPoke(name).then(function(d) {
-            if (!typeSet || typeSet.size === 0 ||
-                d.types.some(function(t) { return typeSet.has(t.type.name); })) {
-              result.push(d);
-            }
-          }).catch(function() {});
-        })).then(function() {
-          return new Promise(function(r) { setTimeout(r, 30); });
-        });
-      });
-    })(MEGA_NAMES.slice(i, i + B));
-  }
-  return promise.then(function() { return result; });
-}
-
-// ─────────────────────────────────────────
-// 3. PERSISTENT STORAGE
-// ─────────────────────────────────────────
-var WIN_KEY     = 'poke_wins_v1';
-var RIVALRY_KEY = 'poke_rivals_v1';
-var HOF_KEY     = 'poke_hof_v1';
-var STATS_KEY   = 'poke_stats_v1';
-
-// Wins
-function getWins() { try { return JSON.parse(localStorage.getItem(WIN_KEY)||'{}'); } catch(e) { return {}; } }
-function recordWin(id) { try { var w=getWins(); w[id]=(w[id]||0)+1; localStorage.setItem(WIN_KEY,JSON.stringify(w)); } catch(e) {} }
-function getWinCount(id) { return getWins()[id] || 0; }
-
-// Rivalry
-function getRivals() { try { return JSON.parse(localStorage.getItem(RIVALRY_KEY)||'{}'); } catch(e) { return {}; } }
-function recordMatchup(wId, lId) {
-  try {
-    var r = getRivals();
-    var key = Math.min(wId,lId) + '_' + Math.max(wId,lId);
-    if (!r[key]) r[key] = {a:wId, b:lId, aWins:0, bWins:0};
-    if (wId === r[key].a) r[key].aWins++; else r[key].bWins++;
-    localStorage.setItem(RIVALRY_KEY, JSON.stringify(r));
-  } catch(e) {}
-}
-function getRivalryText(pA, pB) {
-  try {
-    var r = getRivals();
-    var key = Math.min(pA.id,pB.id) + '_' + Math.max(pA.id,pB.id);
-    if (!r[key]) return null;
-    var d = r[key]; var total = d.aWins + d.bWins;
-    if (total < 2) return null;
-    var aW = pA.id===d.a ? d.aWins : d.bWins;
-    var bW = pA.id===d.b ? d.aWins : d.bWins;
-    if (aW > bW) return cleanName(pA.name)+' LEADS '+aW+'-'+bW+'!';
-    if (bW > aW) return cleanName(pB.name)+' LEADS '+bW+'-'+aW+'!';
-    return 'TIED '+aW+'-'+bW+'!';
-  } catch(e) { return null; }
-}
-
-// Hall of Fame
-function getHOF() { try { return JSON.parse(localStorage.getItem(HOF_KEY)||'[]'); } catch(e) { return []; } }
-function recordChampion(poke, mode) {
-  try {
-    var h = getHOF();
-    // Build path: list of Pokemon the champion defeated, round by round
-    var path = [];
-    if (T && T.bracket) {
-      T.bracket.forEach(function(round) {
-        round.forEach(function(match) {
-          if (match.winner && match.winner.id === poke.id && match.a && match.b) {
-            var defeated = match.winner.id === match.a.id ? match.b : match.a;
-            path.push({id: defeated.id, name: cleanName(defeated.name)});
-          }
-        });
-      });
-    }
-    // Find runner-up (loser of final)
-    var runnerUp = null;
-    if (T && T.bracket && T.bracket.length > 0) {
-      var finalRound = T.bracket[T.bracket.length-1];
-      if (finalRound && finalRound[0]) {
-        var f = finalRound[0];
-        if (f.a && f.b && f.winner) {
-          var lo = f.winner.id === f.a.id ? f.b : f.a;
-          runnerUp = {id: lo.id, name: cleanName(lo.name), bst: bst(lo.stats)};
-        }
-      }
-    }
-    var entry = {
-      id: poke.id, name: cleanName(poke.name),
-      bst: bst(poke.stats), mode: mode,
-      date: new Date().toLocaleDateString(),
-      path: path,
-      runnerUp: runnerUp,
-      matches: _tourneyMatches || 0,
-      upsets: _tourneyUpsets || 0,
-      twoP: _twoPlayer ? {p1:_p1name, p2:_p2name, p1w:_p1wins, p2w:_p2wins} : null
-    };
-    h.unshift(entry);
-    if (h.length > 30) h = h.slice(0, 30);
-    localStorage.setItem(HOF_KEY, JSON.stringify(h));
-  } catch(e) {}
-}
-function openHOF() {
-  renderHOF();
-  go('hof-screen');
-}
-function renderHOF() {
-  var h = getHOF();
-  var el = document.getElementById('hof-list');
-  if (!el) return;
-  if (!h.length) {
-    el.innerHTML = '<div style="text-align:center;font-family:monospace;font-size:10px;color:#444466;padding:40px">NO CHAMPIONS YET!<br>WIN A TOURNAMENT FIRST!</div>';
-    return;
-  }
-  el.innerHTML = '';
-  h.forEach(function(e, i) {
-    var div = document.createElement('div');
-    div.className = 'hof-entry';
-    div.style.cursor = 'pointer';
-    div.style.animationDelay = (i * 0.04) + 's';
-    var pathHint = e.path && e.path.length ? (e.path.length + ' wins') : '';
-    var detailHint = pathHint ? (' &middot; <span style="color:#7AC74C">TAP FOR VAULT</span>') : '';
-    div.innerHTML = '<div class="hof-rank">' + (i === 0 ? '&#127942;' : i+1) + '</div>'
-      + '<img class="hof-img" src="' + imgFb(e.id) + '" alt="' + e.name + '">'
-      + '<div class="hof-info"><div class="hof-name">' + e.name + '</div>'
-      + '<div class="hof-meta">' + e.mode.toUpperCase() + ' &middot; ' + e.date + detailHint + '</div></div>'
-      + '<div class="hof-bst">' + e.bst + '<br><span style="font-size:7px;color:#444466">BST</span></div>';
-    div.onclick = function() { openVaultEntry(i); };
-    el.appendChild(div);
-  });
-}
-
-function openVaultEntry(idx) {
-  var h = getHOF();
-  var e = h[idx]; if (!e) return;
-  var el = document.getElementById('vault-detail');
-  if (!el) return;
-  var pathH = '';
-  if (e.path && e.path.length) {
-    pathH = '<div style="font-family:monospace;font-size:8px;color:#888;letter-spacing:1px;margin-bottom:8px">DEFEATED ' + e.path.length + ' OPPONENTS:</div>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
-    e.path.forEach(function(p, i) {
-      pathH += '<div style="display:flex;flex-direction:column;align-items:center;width:60px">'
-        + '<img src="' + imgFb(p.id) + '" alt="' + p.name + '" style="width:44px;height:44px;object-fit:contain;image-rendering:pixelated;opacity:.7">'
-        + '<div style="font-family:monospace;font-size:6px;color:#aaa;text-align:center;margin-top:2px">' + p.name + '</div></div>';
-    });
-    pathH += '</div>';
-  }
-  var runnerH = '';
-  if (e.runnerUp) {
-    runnerH = '<div style="font-family:monospace;font-size:8px;color:#888;letter-spacing:1px;margin-bottom:6px">RUNNER UP:</div>'
-      + '<div style="display:flex;align-items:center;gap:10px;background:#0a0a18;border:1px solid #252545;border-radius:10px;padding:8px 12px;margin-bottom:12px">'
-      + '<img src="' + imgFb(e.runnerUp.id) + '" style="width:44px;height:44px;object-fit:contain;image-rendering:pixelated">'
-      + '<div style="flex:1"><div style="font-family:monospace;font-size:9px;color:#f0f0ff">' + e.runnerUp.name + '</div>'
-      + '<div style="font-family:monospace;font-size:7px;color:#888">BST: ' + (e.runnerUp.bst || '?') + '</div></div></div>';
-  }
-  var twoPH = '';
-  if (e.twoP) {
-    var winner = e.twoP.p1w > e.twoP.p2w ? e.twoP.p1 : e.twoP.p2w > e.twoP.p1w ? e.twoP.p2 : 'TIE';
-    twoPH = '<div style="background:linear-gradient(135deg,#3b4cca22,#6390F022);border:1px solid #3b4cca;border-radius:10px;padding:10px;margin-bottom:12px;font-family:monospace;font-size:9px;color:#9999ee;text-align:center">'
-      + '<div style="letter-spacing:1px;font-weight:bold;margin-bottom:4px">2 PLAYER GAME</div>'
-      + '<span style="color:#6390F0">' + e.twoP.p1 + ': ' + e.twoP.p1w + '</span>'
-      + ' &nbsp;|&nbsp; <span style="color:#7AC74C">' + e.twoP.p2 + ': ' + e.twoP.p2w + '</span>'
-      + (winner !== 'TIE' ? '<div style="margin-top:4px;color:#ffcb05">WINNER: ' + winner + '</div>' : '<div style="margin-top:4px">TIE GAME!</div>')
-      + '</div>';
-  }
-  el.innerHTML = '<div style="text-align:center;margin-bottom:14px">'
-    + '<img src="' + imgUrl(e.id) + '" onerror="this.onerror=null;this.src=\'' + imgFb(e.id) + '\'" style="width:140px;height:140px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 0 20px rgba(255,203,5,.5))">'
-    + '<div style="font-family:Bangers,Impact,cursive;font-size:32px;color:#ffcb05;letter-spacing:3px;text-shadow:3px 3px 0 #e3350d;margin-top:4px">' + e.name + '</div>'
-    + '<div style="font-family:monospace;font-size:8px;color:#888;margin-top:2px;letter-spacing:1px">' + e.mode.toUpperCase() + ' CHAMPION &middot; ' + e.date + '</div>'
-    + '<div style="font-family:monospace;font-size:9px;color:#ffcb05;margin-top:4px">BST: ' + e.bst + '</div>'
-    + '</div>'
-    + '<div style="background:#13132a;border:1px solid #252545;border-radius:12px;padding:14px">'
-    + twoPH + runnerH + pathH
-    + '<div style="display:flex;justify-content:space-around;font-family:monospace;font-size:8px;color:#888;letter-spacing:1px;padding-top:10px;border-top:1px solid #252545">'
-    + '<div>BATTLES: <span style="color:#ffcb05">' + (e.matches||'?') + '</span></div>'
-    + '<div>UPSETS: <span style="color:#ffcb05">' + (e.upsets||0) + '</span></div>'
-    + '</div></div>';
-  go('vault-screen');
-}
-function clearHOF() {
-  if (confirm('Clear Hall of Fame?')) {
-    localStorage.removeItem(HOF_KEY);
-    renderHOF();
-  }
-}
-
-// ── Resume / Save Tournament ──
-var SAVE_KEY = 'poke_save_v1';
-function saveTournament() {
-  try {
-    if (!T || !T.bracket || T.bracket.length === 0) return;
-    var data = {
-      bracket: T.bracket, round: T.round, match: T.match, mode: T.mode,
-      twoPlayer: _twoPlayer,
-      p1name: _p1name, p2name: _p2name,
-      p1wins: _p1wins, p2wins: _p2wins, twoPturn: _twoPturn,
-      streak: _streak,
-      tStart: _tourneyStartTime, tMatches: _tourneyMatches, tUpsets: _tourneyUpsets,
-      ts: Date.now()
-    };
-    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-  } catch(e) {}
-}
-function hasSavedTournament() {
-  try {
-    var s = localStorage.getItem(SAVE_KEY); if (!s) return null;
-    var d = JSON.parse(s);
-    // Expire saves older than 7 days
-    if (Date.now() - d.ts > 7*24*60*60*1000) { localStorage.removeItem(SAVE_KEY); return null; }
-    return d;
-  } catch(e) { return null; }
-}
-function resumeTournament() {
-  var d = hasSavedTournament(); if (!d) return;
-  T = {bracket:d.bracket, round:d.round, match:d.match, mode:d.mode};
-  _twoPlayer = !!d.twoPlayer;
-  _p1name = d.p1name || 'PLAYER 1';
-  _p2name = d.p2name || 'PLAYER 2';
-  _p1wins = d.p1wins||0; _p2wins = d.p2wins||0;
-  _twoPturn = d.twoPturn || 'p1';
-  _streak = d.streak || {id:null, count:0};
-  _tourneyStartTime = d.tStart || Date.now();
-  _tourneyMatches = d.tMatches || 0; _tourneyUpsets = d.tUpsets || 0;
-  _prevState = null; _canUndo = false;
-  if (_twoPlayer) { update2PBar(); } else { hide2PBar(); }
-  var btn = document.getElementById('two-p-btn');
-  if (btn) {
-    btn.textContent = _twoPlayer ? '2P: ON' : '2P MODE';
-    btn.style.borderColor = _twoPlayer ? '#7AC74C' : '';
-    btn.style.color = _twoPlayer ? '#7AC74C' : '';
-  }
-  // Set replay function based on mode
-  _replayFn = d.mode === 'mega' ? launchMega : d.mode === 'mini' ? launchMini : null;
-  go('battle-screen');
-  renderCurrentBattle();
-}
-function clearSavedTournament() { try { localStorage.removeItem(SAVE_KEY); } catch(e) {} }
-function showResumeBanner() {
-  var existing = document.getElementById('resume-banner');
-  if (existing) existing.parentNode.removeChild(existing);
-  var d = hasSavedTournament(); if (!d) return;
-  var realInRound = d.bracket[d.round].filter(function(m){return m.a&&m.b;}).length;
-  var doneInRound = d.bracket[d.round].filter(function(m){return m.a&&m.b&&m.winner!==null;}).length;
-  var ago = Math.round((Date.now()-d.ts)/60000);
-  var agoText = ago < 1 ? 'just now' : ago < 60 ? (ago+'m ago') : ago < 1440 ? (Math.round(ago/60)+'h ago') : (Math.round(ago/1440)+'d ago');
-  var modeLabel = d.mode === 'mega' ? 'MEGA' : d.mode === 'mini' ? 'MINI' : 'TOURNAMENT';
-  var banner = document.createElement('div');
-  banner.id = 'resume-banner';
-  banner.style.cssText = 'background:linear-gradient(135deg,#3b4cca,#6390F0);border-radius:14px;padding:14px 16px;margin:0 auto 14px;max-width:520px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 4px 20px rgba(59,76,202,.3);';
-  banner.innerHTML = '<div style="font-size:28px">&#9203;</div>'
-    + '<div style="flex:1;text-align:left">'
-    + '<div style="font-family:monospace;font-size:10px;color:#fff;letter-spacing:1px;font-weight:bold">RESUME ' + modeLabel + ' TOURNAMENT</div>'
-    + '<div style="font-family:monospace;font-size:8px;color:rgba(255,255,255,.7);margin-top:3px">'
-    + 'Round ' + (d.round+1) + ' &middot; Match ' + (doneInRound+1) + '/' + realInRound + ' &middot; ' + agoText + '</div>'
-    + '</div>'
-    + '<button onclick="event.stopPropagation();clearSavedTournament();showResumeBanner();" style="background:transparent;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;padding:4px 8px">&times;</button>';
-  banner.onclick = function() { resumeTournament(); };
-  // Insert at top of home screen
-  var home = document.getElementById('home-screen');
-  var modeGrid = home.querySelector('.mode-grid');
-  home.insertBefore(banner, modeGrid);
-}
-
-// Lifetime stats
-function getLifeStats() { try { return JSON.parse(localStorage.getItem(STATS_KEY)||'{"picks":0,"tournaments":0,"upsets":0}'); } catch(e) { return {picks:0,tournaments:0,upsets:0}; } }
-function recordPick() { try { var s=getLifeStats(); s.picks++; localStorage.setItem(STATS_KEY,JSON.stringify(s)); } catch(e) {} }
-function recordTournament() { try { var s=getLifeStats(); s.tournaments++; localStorage.setItem(STATS_KEY,JSON.stringify(s)); } catch(e) {} }
-function recordUpset() { try { var s=getLifeStats(); s.upsets++; localStorage.setItem(STATS_KEY,JSON.stringify(s)); } catch(e) {} }
-function openStats() {
-  var s = getLifeStats();
-  var w = getWins();
-  var wArr = Object.keys(w).map(function(k) { return {id:k, wins:w[k]}; });
-  wArr.sort(function(a,b) { return b.wins - a.wins; });
-  var el = document.getElementById('stats-list');
-  if (!el) return;
-  el.innerHTML = '';
-  var items = [
-    {label:'TOTAL PICKS', val: s.picks, sub:'all time'},
-    {label:'TOURNAMENTS', val: s.tournaments, sub:'completed'},
-    {label:'UPSETS', val: s.upsets, sub:'low seed beats high seed'},
-    {label:'POKEMON TRACKED', val: wArr.length, sub:'with at least 1 win'},
-  ];
-  if (wArr.length > 0) {
-    items.push({label:'MOST WINS', val: cleanName(String(wArr[0].id)), sub: wArr[0].wins + ' career wins'});
-  }
-  items.forEach(function(item) {
-    var div = document.createElement('div');
-    div.className = 'stat-card';
-    div.innerHTML = '<div class="stat-card-label">' + item.label + '</div>'
-      + '<div class="stat-card-val">' + item.val + '</div>'
-      + '<div class="stat-card-sub">' + item.sub + '</div>';
-    el.appendChild(div);
-  });
-  go('stats-screen');
-}
-function clearStats() {
-  if (confirm('Clear all stats?')) {
-    localStorage.removeItem(STATS_KEY);
-    localStorage.removeItem(WIN_KEY);
-    localStorage.removeItem(RIVALRY_KEY);
-    openStats();
-  }
-}
-
-// ─────────────────────────────────────────
-// 4. AUDIO
-// ─────────────────────────────────────────
-var _audioOn = true; var _audioCtx = null;
-function getACtx() {
-  if (!_audioCtx) {
-    try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
-  }
-  return _audioCtx;
-}
-function playTone(freq, type, dur, vol, delay) {
-  if (!_audioOn) return;
-  try {
-    var ctx = getACtx(); if (!ctx) return;
-    var o = ctx.createOscillator(); var g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.type = type || 'square'; o.frequency.value = freq;
-    var t = ctx.currentTime + (delay || 0);
-    g.gain.setValueAtTime(vol || 0.07, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.start(t); o.stop(t + dur + 0.05);
-  } catch(e) {}
-}
-function playPickSound() {
-  try {
-    var rlen = T.bracket[T.round] ? T.bracket[T.round].length : 99;
-    if (rlen === 1) { playFanfare(); return; }
-    playTone(523,'square',.08,.07);
-    playTone(659,'square',.08,.07,.1);
-    playTone(784,'square',.12,.07,.2);
-  } catch(e) {}
-}
-function playFanfare() {
-  try {
-    var n = [523,659,784,1047,784,1047,1319];
-    n.forEach(function(f, i) { playTone(f,'square',.18,.09,i*.12); });
-  } catch(e) {}
-}
-function playUpsetSound() {
-  try {
-    playTone(300,'square',.05,.08);
-    playTone(400,'square',.05,.08,.08);
-    playTone(600,'square',.05,.08,.16);
-    playTone(900,'square',.2,.1,.26);
-  } catch(e) {}
-}
-function toggleAudio() {
-  _audioOn = !_audioOn;
-  var btn = document.getElementById('audio-btn');
-  if (btn) btn.textContent = _audioOn ? 'SOUND ON' : 'SOUND OFF';
-}
-
-// ── Pokemon Cries (real sound effects!) ──
-var _cryAudio = null;
-function playCry(poke) {
-  if (!_audioOn || !poke) return;
-  try {
-    var url = poke.cries && (poke.cries.latest || poke.cries.legacy);
-    if (!url) return;
-    // Stop any previous cry
-    if (_cryAudio) { try { _cryAudio.pause(); } catch(e) {} }
-    _cryAudio = new Audio(url);
-    _cryAudio.volume = 0.4;
-    _cryAudio.play().catch(function(){});
-  } catch(e) {}
-}
-
-// ─────────────────────────────────────────
-// 5. BRACKET ENGINE
-// ─────────────────────────────────────────
-function seedPokes(pokes) {
-  var seen = {}; var unique = [];
-  pokes.forEach(function(p) {
-    if (p && !seen[p.id]) { seen[p.id] = true; unique.push(p); }
-  });
-  // Group by wins, shuffle within each tier for variety
-  var groups = {};
-  unique.forEach(function(p) {
-    var w = getWinCount(p.id);
-    if (!groups[w]) groups[w] = [];
-    groups[w].push(p);
-  });
-  Object.keys(groups).forEach(function(w) { groups[w] = shuffle(groups[w]); });
-  var levels = Object.keys(groups).map(Number).sort(function(a,b) { return b-a; });
-  var result = [];
-  levels.forEach(function(w) { groups[w].forEach(function(p) { result.push(p); }); });
-  return result;
-}
-function buildSeedOrder(size) {
-  if (size === 1) return [1];
-  var half = size / 2;
-  var left = buildSeedOrder(half);
-  var result = [];
-  for (var i = 0; i < left.length; i++) {
-    result.push(left[i]);
-    result.push(size + 1 - left[i]);
-  }
-  return result;
-}
-function mkBracketRound(pokes) {
-  var n = pokes.length;
-  if (n === 0) return [];
-  var sz = 1; while (sz < n) sz *= 2;
-  var seedOrder = buildSeedOrder(sz);
-  var slots = [];
-  for (var i = 0; i < sz; i++) {
-    var seed = seedOrder[i];
-    slots.push(seed <= n ? pokes[seed-1] : null);
-  }
-  var matches = [];
-  for (var i = 0; i < slots.length; i += 2) {
-    var a = slots[i]; var b = slots[i+1];
-    var winner = (a && !b) ? a : (!a && b) ? b : null;
-    matches.push({a:a, b:b, winner:winner, bye: winner !== null});
-  }
-  return matches;
-}
-
-// ─────────────────────────────────────────
-// 6. SCREEN NAVIGATION
-// ─────────────────────────────────────────
-function go(id) {
-  var screens = document.querySelectorAll('.screen');
-  for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
-  var el = document.getElementById(id);
-  if (el) el.classList.add('active');
-  window.scrollTo(0, 0);
-  if (id === 'home-screen') {
-    showResumeBanner();
-    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage('GET_CACHE_SIZE');
-    }
-  }
-}
-
-// ─────────────────────────────────────────
-// 7. STATE
-// ─────────────────────────────────────────
-var state = {
-  pickerGens:  new Set([1,2,3,4]), pickerTypes:  new Set(), pickerMegas:  false,
-  miniGens:    new Set([1,2,3,4]), miniTypes:    new Set(), miniSize: 8,  miniMegas:   false,
-  megaGens:    new Set([1,2,3,4]), megaTypes:    new Set(),              megaMegas:   false,
-  clashGens:   new Set([1,2,3,4]), clashTypeA:   new Set(), clashTypeB:  new Set(),
-  clashRounds: 5,                  clashMegas:   false
-};
-var T = {bracket:[], round:0, match:0, mode:'mini'};
-var _prevState  = null;
-var _canUndo    = false;
-var _replayFn   = null;
-var _twoPlayer  = false;
-var _p1wins     = 0;   // points scored (won their side's match)
-var _p2wins     = 0;
-var _p1name     = 'PLAYER 1';
-var _p2name     = 'PLAYER 2';
-// 2P bracket split:
-// Left half of bracket = P1, Right half = P2
-// Alternating turns: P1 picks odd left matches, P2 picks odd right matches
-// _twoPturn = 'p1' or 'p2' — whose turn it currently is
-var _twoPturn   = 'p1';
-// Track which "conference" current match belongs to
-// P1 owns matches in left half of bracket, P2 owns right half
-// In Grand Final both players pick — whoever wins scores
-var _streak     = {id:null, count:0};
-var _tourneyStartTime = 0;
-var _tourneyMatches   = 0;
-var _tourneyUpsets    = 0;
-
-// ─────────────────────────────────────────
-// 8. FILTER BUILDERS
-// ─────────────────────────────────────────
-function buildGenBtns(containerId, stateKey, onChange) {
-  var el = document.getElementById(containerId); if (!el) return; el.innerHTML = '';
-  [1,2,3,4].forEach(function(g) {
-    var b = document.createElement('button'); b.className = 'gen-btn';
-    if (state[stateKey].has(g)) b.classList.add('on');
-    b.textContent = 'GEN ' + ['I','II','III','IV'][g-1];
-    b.onclick = function() {
-      if (state[stateKey].has(g)) {
-        if (state[stateKey].size === 1) return;
-        state[stateKey].delete(g); b.classList.remove('on');
-      } else {
-        state[stateKey].add(g); b.classList.add('on');
-      }
-      if (onChange) onChange();
-    };
-    el.appendChild(b);
-  });
-}
-function buildTypeBtns(containerId, stateKey, single, excludeKey, onChange) {
-  var el = document.getElementById(containerId); if (!el) return; el.innerHTML = '';
-  ALL_TYPES.forEach(function(t) {
-    var c = TC[t] || '#888';
-    var excluded = excludeKey && state[excludeKey].has(t);
-    var on = state[stateKey].has(t);
-    var b = document.createElement('button'); b.className = 'type-btn';
-    b.disabled = excluded;
-    b.style.borderColor = on ? c : (excluded ? '#1a1a2e' : '#252545');
-    b.style.background  = on ? (c + '22') : (excluded ? '#0d0d1a' : '#0f0f20');
-    b.style.color       = on ? c : (excluded ? '#333' : '#aaaacc');
-    if (on) b.style.boxShadow = '0 0 8px ' + c + '44';
-    b.innerHTML = '<span class="type-emoji">' + TYPE_EMOJI[t] + '</span><span>' + t + '</span>';
-    b.onclick = function() {
-      if (excluded) return;
-      if (single) {
-        state[stateKey].clear();
-        buildTypeBtns(containerId, stateKey, single, excludeKey, onChange);
-        state[stateKey].add(t);
-        buildTypeBtns(containerId, stateKey, single, excludeKey, onChange);
-        if (excludeKey) {
-          if (stateKey === 'clashTypeA') buildTypeBtns('cb-types','clashTypeB',true,'clashTypeA',onChange);
-          else buildTypeBtns('ca-types','clashTypeA',true,'clashTypeB',onChange);
-        }
-      } else {
-        if (on) state[stateKey].delete(t); else state[stateKey].add(t);
-        buildTypeBtns(containerId, stateKey, single, excludeKey, onChange);
-      }
-      if (onChange) onChange();
-    };
-    el.appendChild(b);
-  });
-}
-function buildSizeBtns(containerId, stateKey, sizes, onChange) {
-  var el = document.getElementById(containerId); if (!el) return; el.innerHTML = '';
-  sizes.forEach(function(item) {
-    var b = document.createElement('button'); b.className = 'sz-btn';
-    if (state[stateKey] === item.v) b.classList.add('on');
-    b.textContent = item.l;
-    b.onclick = function() {
-      state[stateKey] = item.v;
-      var btns = el.querySelectorAll('.sz-btn');
-      for (var i = 0; i < btns.length; i++) btns[i].classList.remove('on');
-      b.classList.add('on');
-      if (onChange) onChange();
-    };
-    el.appendChild(b);
-  });
-}
-function buildMegaToggle(containerId, stateKey) {
-  var el = document.getElementById(containerId); if (!el) return; el.innerHTML = '';
-  var on = state[stateKey];
-  var btn = document.createElement('button');
-  btn.className = 'mega-toggle-btn';
-  btn.style.border = '2px solid ' + (on ? '#ffcb05' : '#252545');
-  btn.style.background = on ? 'rgba(255,203,5,.12)' : '#090915';
-  btn.style.color = on ? '#ffcb05' : '#777777';
-  btn.innerHTML = '<span style="font-size:16px">&#9889;</span>'
-    + '<div><div style="font-weight:bold;margin-bottom:2px">' + (on ? 'ON: ' : '') + 'MEGAS &amp; SPECIAL FORMS</div>'
-    + '<div style="font-size:8px;opacity:.7">61 Mega Evolutions, Primals &amp; Alt Forms</div></div>';
-  btn.onclick = function() {
-    state[stateKey] = !state[stateKey];
-    buildMegaToggle(containerId, stateKey);
-    updateMegaCount();
-  };
-  el.appendChild(btn);
-}
-function updateMegaCount() {
-  var n = allIds(state.megaGens).length;
-  var extra = state.megaMegas ? 61 : 0;
-  var total = n + extra;
-  var sz = 1; while (sz < total) sz *= 2;
-  var el = document.getElementById('mega-count'); if (!el) return;
-  var extraText = extra ? ' (+' + extra + ' MEGAS)' : '';
-  el.innerHTML = state.megaTypes.size
-    ? 'TYPE FILTER ON - COUNT AT LOAD TIME'
-    : 'ALL <b>' + total + '</b> POKEMON' + extraText + ' - BRACKET: <b>' + sz + '</b> SLOTS';
-}
-function validateClash() {
-  var a = [...state.clashTypeA][0]; var b = [...state.clashTypeB][0];
-  var w = document.getElementById('clash-warn');
-  var btn = document.getElementById('clash-start-btn');
-  if (!a || !b) { if(w)w.textContent='SELECT A TYPE FOR EACH SIDE'; if(btn)btn.disabled=true; }
-  else if (a === b) { if(w)w.textContent='TYPES MUST BE DIFFERENT!'; if(btn)btn.disabled=true; }
-  else { if(w)w.textContent=''; if(btn)btn.disabled=false; }
-}
-function initFilters() {
-  buildGenBtns('ps-gens','pickerGens');
-  buildTypeBtns('ps-types','pickerTypes',false,null,null);
-  buildMegaToggle('ps-mega','pickerMegas');
-  buildSizeBtns('mini-sizes','miniSize',[{v:8,l:'8'},{v:16,l:'16'},{v:32,l:'32'},{v:64,l:'64'}],null);
-  buildGenBtns('ms-gens','miniGens');
-  buildTypeBtns('ms-types','miniTypes',false,null,null);
-  buildMegaToggle('ms-mega','miniMegas');
-  buildGenBtns('xs-gens','megaGens',updateMegaCount);
-  buildTypeBtns('xs-types','megaTypes',false,null,updateMegaCount);
-  buildMegaToggle('xs-mega','megaMegas');
-  buildGenBtns('cc-gens','clashGens');
-  buildTypeBtns('ca-types','clashTypeA',true,'clashTypeB',validateClash);
-  buildTypeBtns('cb-types','clashTypeB',true,'clashTypeA',validateClash);
-  buildSizeBtns('clash-rounds','clashRounds',[{v:3,l:'BEST OF 3'},{v:5,l:'BEST OF 5'},{v:7,l:'BEST OF 7'},{v:999,l:'ALL ROUNDS'}],validateClash);
-  buildMegaToggle('cc-mega','clashMegas');
-  updateMegaCount();
-}
-
-// ─────────────────────────────────────────
-// 9. CARD RENDERER
-// ─────────────────────────────────────────
-function renderCard(el, poke) {
-  if (!el || !poke) return;
-  var ac = TC[poke.types[0] && poke.types[0].type.name] || '#3b4cca';
-  el.style.setProperty('--ac', ac);
-  var typeH = poke.types.map(function(t) {
-    var c = TC[t.type.name] || '#888';
-    return '<span class="type-badge" style="background:' + c + '22;color:' + c + ';border-color:' + c + '44">'
-      + TYPE_EMOJI[t.type.name] + ' ' + t.type.name + '</span>';
-  }).join('');
-  var statH = poke.stats.map(function(s, i) {
-    return '<div class="stat-row">'
-      + '<span class="stat-lbl">' + SL[i] + '</span>'
-      + '<div class="stat-bg"><div class="stat-fill" style="background:' + SC[i] + '" data-val="' + s.base_stat + '"></div></div>'
-      + '<span class="stat-num">' + s.base_stat + '</span></div>';
-  }).join('');
-  var numLabel = poke.id < 10000
-    ? '#' + String(poke.id).padStart(3,'0') + ' GEN ' + genLbl(poke.id)
-    : genLbl(poke.id);
-  el.innerHTML = '<div class="poke-img-wrap">'
-    + '<img class="poke-img" src="' + imgUrl(poke.id) + '" alt="' + poke.name + '"'
-    + ' style="filter:drop-shadow(0 4px 12px ' + ac + '55)"'
-    + ' onerror="this.onerror=null;this.src=\'' + imgFb(poke.id) + '\'">'
-    + '</div>'
-    + '<div class="poke-info">'
-    + '<div class="poke-num">' + numLabel + '</div>'
-    + '<div class="poke-name">' + cleanName(poke.name) + '</div>'
-    + '<div class="poke-types">' + typeH + '</div>'
-    + '<div class="poke-stats">' + statH + '</div>'
-    + '<div class="poke-bst">TOTAL: <span>' + bst(poke.stats) + '</span></div>'
-    + '</div>';
-  el.classList.remove('winner','loser','locked','p1-card','p2-card');
-  // Animate stat bars
-  setTimeout(function() {
-    var bars = el.querySelectorAll('.stat-fill');
-    for (var i = 0; i < bars.length; i++) {
-      bars[i].style.width = Math.min(100, (parseInt(bars[i].dataset.val) / 255) * 100) + '%';
-    }
-  }, 80);
-}
-function setLoad(text, pct) {
-  var el = document.getElementById('load-text'); if (el) el.innerHTML = text.replace(/\n/g,'<br>');
-  var bar = document.getElementById('load-bar'); if (bar) bar.style.width = (pct * 100) + '%';
-}
-function triggerFlash() {
-  var el = document.getElementById('pick-flash'); if (!el) return;
-  el.style.display = 'block'; el.style.animation = 'none';
-  void el.offsetWidth;
-  el.style.animation = 'screenFlash .45s ease forwards';
-  setTimeout(function() { el.style.display = 'none'; }, 480);
-}
-function showTypeAdv(pA, pB) {
-  var el = document.getElementById('type-adv-bar'); if (!el) return;
-  var aT = pA.types.map(function(t){return t.type.name;});
-  var bT = pB.types.map(function(t){return t.type.name;});
-  var aStrong = false; var bStrong = false;
-  aT.forEach(function(at) { if(TYPE_CHART[at]) TYPE_CHART[at].forEach(function(bt){if(bT.indexOf(bt)>-1)aStrong=true;}); });
-  bT.forEach(function(bt) { if(TYPE_CHART[bt]) TYPE_CHART[bt].forEach(function(at){if(aT.indexOf(at)>-1)bStrong=true;}); });
-  if (aStrong && !bStrong) {
-    var c = TC[aT[0]] || '#ffcb05';
-    el.textContent = TYPE_EMOJI[aT[0]] + ' ' + cleanName(pA.name) + ' HAS TYPE ADVANTAGE!';
-    el.style.cssText = 'display:block;text-align:center;font-family:monospace;font-size:8px;'
-      + 'letter-spacing:1px;padding:5px 14px;margin:3px auto;border-radius:20px;max-width:520px;'
-      + 'background:' + c + '22;color:' + c + ';border:1px solid ' + c + '55;';
-  } else if (bStrong && !aStrong) {
-    var c = TC[bT[0]] || '#ffcb05';
-    el.textContent = TYPE_EMOJI[bT[0]] + ' ' + cleanName(pB.name) + ' HAS TYPE ADVANTAGE!';
-    el.style.cssText = 'display:block;text-align:center;font-family:monospace;font-size:8px;'
-      + 'letter-spacing:1px;padding:5px 14px;margin:3px auto;border-radius:20px;max-width:520px;'
-      + 'background:' + c + '22;color:' + c + ';border:1px solid ' + c + '55;';
-  } else {
-    el.style.display = 'none';
-  }
-}
-
-// ─────────────────────────────────────────
-// 10. TOURNAMENT ENGINE
-// ─────────────────────────────────────────
-function startTournament(pokes, mode) {
-  var seeded = seedPokes(pokes);
-  var r1 = mkBracketRound(seeded);
-  T = {bracket:[r1], round:0, match:0, mode:mode};
-  _prevState = null; _canUndo = false;
-  _p1wins = 0; _p2wins = 0; _twoPturn = 'p1';
-  if (_twoPlayer) { update2PBar(); } else { hide2PBar(); }
-  _streak = {id:null, count:0};
-  _tourneyStartTime = Date.now();
-  _tourneyMatches = 0; _tourneyUpsets = 0;
-  // Find first real match
-  var m = 0;
-  while (m < r1.length && (r1[m].winner !== null || !r1[m].a || !r1[m].b)) m++;
-  T.match = m;
-  // Update 2P button state
-  var btn = document.getElementById('two-p-btn');
-  if (btn) { btn.textContent = '2P MODE'; btn.style.borderColor=''; btn.style.color=''; }
-  go('battle-screen');
-  renderCurrentBattle();
-}
-function renderCurrentBattle() {
-  // Defensive: try up to 20 times to find a valid match.
-  // NEVER kick to home mid-tournament. If something's broken, stay put.
-  var safety = 0;
-  while (safety < 20) {
-    safety++;
-    var round = T.bracket[T.round];
-    if (!round) return; // bracket lost — stay on screen
-    // Skip past byes / completed matches in current round
-    while (T.match < round.length && (round[T.match].winner !== null || !round[T.match].a || !round[T.match].b)) {
-      T.match++;
-    }
-    // Found a real match — proceed
-    if (T.match < round.length) break;
-    // Round exhausted — collect winners and advance
-    var seen = {};
-    var winners = round.map(function(m){return m.winner;}).filter(function(w){
-      if (!w || seen[w.id]) return false; seen[w.id] = true; return true;
-    });
-    if (winners.length === 1) { showChampion(winners[0]); return; }
-    if (winners.length === 0) return; // truly broken — stay put
-    var nextRound = mkBracketRound(seedPokes(winners));
-    T.bracket.push(nextRound); T.round++; T.match = 0;
-    // Loop continues
-  }
-  var round = T.bracket[T.round];
-  var match = round[T.match];
-  if (!match || !match.a || !match.b) return; // never kick to home
-  var rlen = round.length;
-  var rname = rlen===1 ? 'GRAND FINAL!' : rlen===2 ? 'SEMI-FINALS' : rlen===4 ? 'QUARTER-FINALS' : rlen<=8 ? 'ROUND OF '+(rlen*2) : 'ROUND '+(T.round+1);
-  var real = round.filter(function(m) { return m.a && m.b; });
-  var done = real.filter(function(m) { return m.winner !== null; }).length;
-  document.getElementById('round-name').textContent = rname;
-  document.getElementById('round-info').textContent = 'MATCH ' + (done+1) + ' OF ' + real.length;
-  var fa = document.getElementById('fighter-a');
-  var fb = document.getElementById('fighter-b');
-  // Slide in animation
-  fa.style.animation = 'none'; fb.style.animation = 'none';
-  void fa.offsetWidth;
-  fa.style.animation = 'slideInLeft .35s cubic-bezier(.175,.885,.32,1.275)';
-  fb.style.animation = 'slideInRight .35s cubic-bezier(.175,.885,.32,1.275)';
-  renderCard(fa, match.a);
-  renderCard(fb, match.b);
-  fa.onclick = function() { pickWinner('a'); };
-  fb.onclick = function() { pickWinner('b'); };
-  // Stage backgrounds per round
-  var battleEl = document.getElementById('battle-screen');
-  if (battleEl) {
-    battleEl.classList.remove('stage-r1','stage-r2','stage-r3','stage-r4','stage-final');
-    var stageClass;
-    if (rlen === 1) stageClass = 'stage-final';
-    else if (rlen === 2) stageClass = 'stage-r4';
-    else if (rlen === 4) stageClass = 'stage-r3';
-    else if (rlen <= 8) stageClass = 'stage-r2';
-    else stageClass = 'stage-r1';
-    battleEl.classList.add(stageClass);
-  }
-  // 2P colors and context
-  if (_twoPlayer) {
-    var isFinal = round.length === 1;
-    if (isFinal) {
-      fa.classList.add('final-card'); fb.classList.add('final-card');
-      var hint = document.getElementById('battle-hint');
-      if (hint) hint.innerHTML = '<span class="two-p-final-banner">&#127942; GRAND FINAL! &#127942;</span>';
-    } else if (_twoPturn === 'p1') {
-      fa.classList.add('p1-card'); fb.classList.add('p1-card');
-    } else {
-      fa.classList.add('p2-card'); fb.classList.add('p2-card');
-    }
-    update2PBar();
-  }
-  // Type advantage
-  showTypeAdv(match.a, match.b);
-  // Rivalry hint
-  var riv = getRivalryText(match.a, match.b);
-  var hint = document.getElementById('battle-hint');
-  if (hint) hint.textContent = riv ? ('RIVALRY: ' + riv) : 'TAP A POKEMON TO PICK THE WINNER!';
-  // Undo button
-  updateUndoBtn();
-}
-function updateUndoBtn() {
-  var controls = document.getElementById('battle-controls'); if (!controls) return;
-  var ex = document.getElementById('undo-btn');
-  if (ex) ex.parentNode.removeChild(ex);
-  if (_canUndo) {
-    var b = document.createElement('button');
-    b.id = 'undo-btn'; b.className = 'undo-btn'; b.textContent = 'UNDO';
-    b.onclick = handleUndo;
-    controls.insertBefore(b, controls.firstChild);
-  }
-}
-function pickWinner(side) {
-  var match = T.bracket[T.round][T.match];
-  if (!match || match.winner) return;
-  var fa = document.getElementById('fighter-a');
-  var fb = document.getElementById('fighter-b');
-  // Lock cards immediately — visual feedback first
-  fa.onclick = null; fb.onclick = null;
-  fa.classList.add(side==='a' ? 'winner' : 'loser', 'locked');
-  fb.classList.add(side==='b' ? 'winner' : 'loser', 'locked');
-  // 2P score
-  if (_twoPlayer) { if (side==='a') _p1wins++; else _p2wins++; }
-  // Flash and sound — instant
-  triggerFlash();
-  try { playPickSound(); } catch(e) {}
-  // Play the winner's real Pokemon cry!
-  var pickedWinner = side==='a' ? match.a : match.b;
-  try { playCry(pickedWinner); } catch(e) {}
-  // Type-themed particle burst from winner card
-  try {
-    var winnerType = pickedWinner.types[0] && pickedWinner.types[0].type.name;
-    spawnTypeFX(winnerType, side==='a' ? fa : fb);
-  } catch(e) {}
-  // Streak badge
-  var winner = side==='a' ? match.a : match.b;
-  var loser  = side==='a' ? match.b : match.a;
-  if (_streak.id === winner.id) _streak.count++; else _streak = {id:winner.id, count:1};
-  if (_streak.count >= 3) {
-    var badge = document.createElement('div');
-    badge.className = 'streak-badge';
-    var n = _streak.count;
-    badge.textContent = n>=10 ? ('&#128293;&#128293;&#128293; '+n+' STREAK!!!') : n>=7 ? ('&#128293;&#128293; '+n+' STREAK!!') : n>=5 ? ('&#128293; '+n+' STREAK!') : ('&#9889; '+n+' IN A ROW!');
-    badge.style.background = n>=7 ? '#e3350d' : n>=5 ? '#7AC74C' : '#3b4cca';
-    badge.style.color = '#fff';
-    (side==='a' ? fa : fb).appendChild(badge);
-  }
-  // Upset detection (lower seed wins = higher bracket position index)
-  var matchIdx = T.bracket[T.round].indexOf(match);
-  var winnerSeedPos = side==='a' ? matchIdx*2 : matchIdx*2+1;
-  var loserSeedPos  = side==='a' ? matchIdx*2+1 : matchIdx*2;
-  var isUpset = loserSeedPos < winnerSeedPos && (winnerSeedPos - loserSeedPos) >= 4;
-  if (isUpset) { showUpset(); }
-  // Heavy work inside setTimeout so UI paints first
-  setTimeout(function() {
-    // Save undo state (deep copy AFTER UI update)
-    _prevState = {bracket: JSON.parse(JSON.stringify(T.bracket)), round: T.round, match: T.match};
-    _canUndo = true; updateUndoBtn();
-    // Record
-    recordWin(winner.id);
-    recordMatchup(winner.id, loser.id);
-    recordPick();
-    if (isUpset) { recordUpset(); }
-    _tourneyMatches++;
-    // Set winner
-    T.bracket[T.round][T.match].winner = winner;
-    // Save tournament state for resume
-    saveTournament();
-    var round = T.bracket[T.round];
-    // Find next unplayed real match
-    var next = T.match + 1;
-    while (next < round.length && (round[next].winner !== null || !round[next].a || !round[next].b)) next++;
-    if (next < round.length) {
-      // Score whoever just picked, then flip turn
-      if (_twoPlayer) {
-        if (_twoPturn === 'p1') _p1wins++; else _p2wins++;
-        _twoPturn = _twoPturn === 'p1' ? 'p2' : 'p1';
-      }
-      T.match = next;
-      // Fade cards between matches
-      fa.style.transition = 'opacity .2s'; fb.style.transition = 'opacity .2s';
-      fa.style.opacity = '0'; fb.style.opacity = '0';
-      setTimeout(function() {
-        fa.style.opacity = '1'; fb.style.opacity = '1';
-        renderCurrentBattle();
-      }, 220);
-      return;
-    }
-    // Round complete
-    var seen = {}; var winners = round.map(function(m){return m.winner;}).filter(function(w){
-      if (!w || seen[w.id]) return false; seen[w.id] = true; return true;
-    });
-    if (winners.length === 1) { showChampion(winners[0]); return; }
-    // Build next round
-    var nextRound = mkBracketRound(seedPokes(winners));
-    T.bracket.push(nextRound); T.round++;
-    // Score and flip turn for the last match of the round
-    if (_twoPlayer) {
-      if (_twoPturn === 'p1') _p1wins++; else _p2wins++;
-      _twoPturn = _twoPturn === 'p1' ? 'p2' : 'p1';
-    }
-    _prevState = null; _canUndo = false; updateUndoBtn();
-    var nm = 0;
-    while (nm < nextRound.length && (nextRound[nm].winner !== null || !nextRound[nm].a || !nextRound[nm].b)) nm++;
-    T.match = nm;
-    // Show round transition
-    var rl = nextRound.filter(function(m){return m.a&&m.b;}).length;
-    var lbl = rl===1?'GRAND FINAL!':rl===2?'SEMI-FINALS':rl===4?'QUARTER-FINALS':'NEXT ROUND';
-    document.getElementById('trans-label').textContent = lbl;
-    document.getElementById('round-transition').classList.add('visible');
-    setTimeout(function() {
-      document.getElementById('round-transition').classList.remove('visible');
-      renderCurrentBattle();
-    }, 1500);
-  }, 850);
-}
-function handleUndo() {
-  if (!_prevState) return;
-  T.bracket = JSON.parse(JSON.stringify(_prevState.bracket));
-  T.round = _prevState.round; T.match = _prevState.match;
-  _prevState = null; _canUndo = false;
-  renderCurrentBattle();
-}
-function showUpset() {
-  var el = document.getElementById('upset-banner'); if (!el) return;
-  el.style.display = 'flex';
-  try { playUpsetSound(); } catch(e) {}
-  setTimeout(function() {
-    el.style.display = 'none';
-    spawnConfetti();
-  }, 1000);
-}
-function spawnTypeFX(type, originEl) {
-  if (!type || !originEl) return;
-  try {
-    var rect = originEl.getBoundingClientRect();
-    var cx = rect.left + rect.width / 2;
-    var cy = rect.top + rect.height / 2;
-    var fx = {
-      fire:     {emoji:'\ud83d\udd25', anim:'particleFloat', count:14, color:'#EE8130'},
-      water:    {emoji:'\ud83d\udca7', anim:'particleRipple', count:6,  color:'#6390F0'},
-      electric: {emoji:'\u26a1',        anim:'particleSpark', count:18, color:'#F7D02C'},
-      grass:    {emoji:'\ud83c\udf43', anim:'particleLeaf',  count:14, color:'#7AC74C'},
-      ice:      {emoji:'\u2744\ufe0f',  anim:'particleFloat', count:12, color:'#96D9D6'},
-      psychic:  {emoji:'\u2728',         anim:'particlePsychic',count:8, color:'#F95587'},
-      ghost:    {emoji:'\ud83d\udc7b', anim:'particleSwirl', count:10, color:'#735797'},
-      dragon:   {emoji:'\ud83d\udd25', anim:'particleSwirl', count:14, color:'#6F35FC'},
-      dark:     {emoji:'\ud83c\udf11', anim:'particleSwirl', count:10, color:'#705746'},
-      fighting: {emoji:'\ud83d\udca5', anim:'particleSpark', count:12, color:'#C22E28'},
-      rock:     {emoji:'\ud83e\udea8', anim:'particleSpark', count:10, color:'#B6A136'},
-      ground:   {emoji:'\ud83c\udf2a',  anim:'particleSpark', count:10, color:'#E2BF65'},
-      flying:   {emoji:'\ud83d\udca8', anim:'particleSwirl', count:10, color:'#A98FF3'},
-      poison:   {emoji:'\ud83d\udc80', anim:'particleFloat', count:10, color:'#A33EA1'},
-      bug:      {emoji:'\ud83d\udc1b', anim:'particleLeaf',  count:10, color:'#A6B91A'},
-      steel:    {emoji:'\u2728',         anim:'particleSpark', count:12, color:'#B7B7CE'},
-      fairy:    {emoji:'\u2728',         anim:'particlePsychic',count:10, color:'#D685AD'},
-      normal:   {emoji:'\u2728',         anim:'particleSpark', count:8,  color:'#A8A77A'}
-    };
-    var conf = fx[type] || fx.normal;
-    for (var i = 0; i < conf.count; i++) {
-      (function(idx) {
-        setTimeout(function() {
-          var p = document.createElement('div');
-          var angle = (idx / conf.count) * Math.PI * 2 + Math.random() * 0.5;
-          var dist = 60 + Math.random() * 80;
-          var dx = Math.cos(angle) * dist;
-          var dy = Math.sin(angle) * dist - 20;
-          if (conf.anim === 'particleRipple') {
-            p.style.cssText = 'position:fixed;left:' + (cx-30) + 'px;top:' + (cy-30) + 'px;'
-              + 'width:60px;height:60px;border-radius:50%;border:6px solid ' + conf.color + ';'
-              + 'pointer-events:none;z-index:90;animation:particleRipple ' + (.8 + idx*.15) + 's ease-out forwards;';
-          } else if (conf.anim === 'particleSpark') {
-            p.style.cssText = 'position:fixed;left:' + cx + 'px;top:' + cy + 'px;'
-              + 'font-size:' + (16 + Math.random()*12) + 'px;pointer-events:none;z-index:90;'
-              + '--dx:' + dx + 'px;--dy:' + dy + 'px;'
-              + 'animation:particleSpark ' + (.6 + Math.random()*.4) + 's ease-out forwards;';
-            p.textContent = conf.emoji;
-          } else if (conf.anim === 'particleLeaf') {
-            p.style.cssText = 'position:fixed;left:' + cx + 'px;top:' + cy + 'px;'
-              + 'font-size:' + (14 + Math.random()*10) + 'px;pointer-events:none;z-index:90;'
-              + '--dx:' + (dx*1.2) + 'px;'
-              + 'animation:particleLeaf ' + (1 + Math.random()*.8) + 's ease-out forwards;';
-            p.textContent = conf.emoji;
-          } else if (conf.anim === 'particleSwirl') {
-            p.style.cssText = 'position:fixed;left:' + cx + 'px;top:' + cy + 'px;'
-              + 'font-size:' + (18 + Math.random()*8) + 'px;pointer-events:none;z-index:90;'
-              + 'animation:particleSwirl ' + (.8 + Math.random()*.6) + 's ease-out forwards;';
-            p.textContent = conf.emoji;
-          } else if (conf.anim === 'particlePsychic') {
-            p.style.cssText = 'position:fixed;left:' + (cx-25) + 'px;top:' + (cy-25) + 'px;'
-              + 'width:50px;height:50px;border-radius:50%;'
-              + 'background:radial-gradient(circle,' + conf.color + 'cc,transparent);'
-              + 'pointer-events:none;z-index:90;'
-              + 'animation:particlePsychic ' + (.9 + idx*.1) + 's ease-out forwards;';
-          } else {
-            // particleFloat
-            p.style.cssText = 'position:fixed;left:' + (cx + (Math.random()-0.5)*60) + 'px;top:' + cy + 'px;'
-              + 'font-size:' + (16 + Math.random()*14) + 'px;pointer-events:none;z-index:90;'
-              + 'animation:particleFloat ' + (.8 + Math.random()*.6) + 's ease-out forwards;';
-            p.textContent = conf.emoji;
-          }
-          document.body.appendChild(p);
-          setTimeout(function() { if (p.parentNode) p.parentNode.removeChild(p); }, 2000);
-        }, idx * 35);
-      })(i);
-    }
-  } catch(e) {}
-}
-
-function spawnConfetti() {
-  var cols = ['#ffcb05','#e3350d','#3b4cca','#7AC74C','#F95587','#7AC74C'];
-  for (var i = 0; i < 28; i++) {
-    (function(idx) {
-      setTimeout(function() {
-        var c = document.createElement('div');
-        c.style.cssText = 'position:fixed;top:-20px;left:' + Math.floor(Math.random()*100) + '%;'
-          + 'width:' + (6+Math.floor(Math.random()*6)) + 'px;height:' + (6+Math.floor(Math.random()*6)) + 'px;'
-          + 'background:' + cols[idx%6] + ';border-radius:2px;z-index:300;pointer-events:none;'
-          + 'animation:confettiDrop ' + (1.4+Math.random()) + 's ease forwards;';
-        document.body.appendChild(c);
-        setTimeout(function() { if (c.parentNode) c.parentNode.removeChild(c); }, 3000);
-      }, idx * 55);
-    })(i);
-  }
-}
-function toggle2Player() {
-  if (!_twoPlayer) {
-    // Prompt for player names
-    var n1 = prompt('Player 1 name (Blue side):');
-    if (n1 === null) return;
-    if (!n1.trim()) n1 = 'PLAYER 1';
-    var n2 = prompt('Player 2 name (Green side):');
-    if (n2 === null) return;
-    if (!n2.trim()) n2 = 'PLAYER 2';
-    _p1name = n1.trim().toUpperCase().slice(0,12);
-    _p2name = n2.trim().toUpperCase().slice(0,12);
-    _twoPlayer = true;
-    _p1wins = 0; _p2wins = 0;
-    _twoPturn = 'p1';
-    update2PBar();
-  } else {
-    _twoPlayer = false;
-    hide2PBar();
-  }
-  var btn = document.getElementById('two-p-btn');
-  if (btn) {
-    btn.textContent = _twoPlayer ? '2P: ON' : '2P MODE';
-    btn.style.borderColor = _twoPlayer ? '#7AC74C' : '';
-    btn.style.color = _twoPlayer ? '#7AC74C' : '';
-  }
-  renderCurrentBattle();
-}
-
-function get2POwner(matchIdx, roundLen) {
-  // Simple alternating — whoever's turn it is owns this match
-  return _twoPturn;
-}
-
-function update2PBar() {
-  var bar = document.getElementById('two-p-bar');
-  if (!bar) return;
-  if (!_twoPlayer) { bar.style.display='none'; return; }
-  bar.style.display = 'block';
-  var p1el = document.getElementById('two-p-p1-name');
-  var p2el = document.getElementById('two-p-p2-name');
-  var p1pts = document.getElementById('two-p-p1-pts');
-  var p2pts = document.getElementById('two-p-p2-pts');
-  var turnEl = document.getElementById('two-p-turn');
-  if (p1el) p1el.textContent = _p1name;
-  if (p2el) p2el.textContent = _p2name;
-  if (p1pts) p1pts.textContent = _p1wins;
-  if (p2pts) p2pts.textContent = _p2wins;
-  var ownerName = _twoPturn === 'p1' ? _p1name : _p2name;
-  var ownerColor = _twoPturn === 'p1' ? '#6390F0' : '#7AC74C';
-  var round = T.bracket[T.round];
-  var rlen = round ? round.length : 2;
-  if (turnEl) {
-    turnEl.textContent = rlen===1
-      ? 'GRAND FINAL - ' + ownerName + ' PICKS!'
-      : ownerName + "'S TURN - TAP YOUR POKEMON!";
-    turnEl.style.color = ownerColor;
-  }
-}
-
-function hide2PBar() {
-  var bar = document.getElementById('two-p-bar');
-  if (bar) bar.style.display = 'none';
-}
-
-// ─────────────────────────────────────────
-// 11. BRACKET VIEW
-// ─────────────────────────────────────────
-var _bracketViewRound = 0;
-var _bracketFromScreen = 'battle-screen';
-function viewBracket() {
-  _bracketFromScreen = 'battle-screen';
-  _bracketViewRound = T.round;
-  renderBracketView();
-  go('bracket-screen');
-}
-function renderBracketView() {
-  var el = document.getElementById('bracket-inner'); if (!el) return;
-  el.innerHTML = '';
-  var totalRounds = T.bracket.length;
-  var round = T.bracket[_bracketViewRound];
-  if (!round) return;
-  var rlen = round.length;
-  var rname = rlen===1?'GRAND FINAL':rlen===2?'SEMI-FINALS':rlen===4?'QUARTER-FINALS':rlen<=8?'ROUND OF '+(rlen*2):'ROUND '+(_bracketViewRound+1);
-  // Navigation
-  var nav = document.createElement('div'); nav.className = 'b-round-nav';
-  var prev = document.createElement('button'); prev.className = 'b-nav-btn'; prev.textContent = 'PREV';
-  prev.disabled = _bracketViewRound <= 0;
-  prev.onclick = function() { if (_bracketViewRound > 0) { _bracketViewRound--; renderBracketView(); } };
-  var title = document.createElement('div'); title.className = 'b-round-title'; title.textContent = rname;
-  var next = document.createElement('button'); next.className = 'b-nav-btn'; next.textContent = 'NEXT';
-  next.disabled = _bracketViewRound >= totalRounds - 1;
-  next.onclick = function() { if (_bracketViewRound < totalRounds-1) { _bracketViewRound++; renderBracketView(); } };
-  nav.appendChild(prev); nav.appendChild(title); nav.appendChild(next);
-  var sub = document.createElement('div');
-  sub.style.cssText = 'font-family:monospace;font-size:8px;color:#6666aa;text-align:center;margin-bottom:8px;letter-spacing:1px;';
-  sub.textContent = 'ROUND ' + (_bracketViewRound+1) + ' OF ' + totalRounds;
-  el.appendChild(sub); el.appendChild(nav);
-  // Back button
-  var backBtn = document.getElementById('bracket-back-btn');
-  if (backBtn) { backBtn.onclick = function() { go(_bracketFromScreen); }; }
-  // Matchups
-  var realMatches = round.filter(function(m) { return m.a && m.b; });
-  var byeCount = round.filter(function(m) { return m.bye; }).length;
-  var isCurrent = _bracketViewRound === T.round;
-  realMatches.forEach(function(match, i) {
-    var div = document.createElement('div'); div.className = 'b-matchup';
-    if (isCurrent && !match.winner) div.classList.add('current');
-    function makeSlot(poke, won, lost) {
-      var slot = document.createElement('div'); slot.className = 'b-slot';
-      if (won) slot.classList.add('won');
-      if (lost) slot.classList.add('lost');
-      var wins = getWinCount(poke.id);
-      slot.innerHTML = '<img class="b-slot-img" src="' + imgFb(poke.id) + '" alt="">'
-        + '<span class="b-slot-name">' + cleanName(poke.name) + '</span>'
-        + (wins > 0 ? '<span class="b-slot-wins">' + wins + 'W</span>' : '')
-        + (won ? ' <span style="font-size:12px">&#11088;</span>' : '');
-      return slot;
-    }
-    var aWon = match.winner && match.winner.id === match.a.id;
-    var bWon = match.winner && match.winner.id === match.b.id;
-    var vs = document.createElement('div'); vs.className = 'b-vs'; vs.textContent = 'VS';
-    div.appendChild(makeSlot(match.a, aWon, bWon));
-    div.appendChild(vs);
-    div.appendChild(makeSlot(match.b, bWon, aWon));
-    el.appendChild(div);
-  });
-  if (byeCount > 0) {
-    var byeDiv = document.createElement('div'); byeDiv.className = 'b-bye-note';
-    byeDiv.textContent = byeCount + ' BYE' + (byeCount>1?'S':'') + ' - TOP SEEDS AUTO-ADVANCED';
-    el.appendChild(byeDiv);
-  }
-}
-
-// ─────────────────────────────────────────
-// 12. CHAMPION SCREEN
-// ─────────────────────────────────────────
-function showChampion(poke) {
-  clearSavedTournament();  // tournament complete
-  recordChampion(poke, T.mode);
-  recordTournament();
-  var typeH = poke.types.map(function(t) {
-    var c = TC[t.type.name] || '#888';
-    return '<span class="type-badge" style="background:'+c+'22;color:'+c+';border-color:'+c+'44;font-size:7px;padding:3px 8px">'
-      + TYPE_EMOJI[t.type.name] + ' ' + t.type.name + '</span>';
-  }).join('');
-  document.getElementById('champ-title').textContent = 'CHAMPION!';
-  var sub;
-  if (_twoPlayer) {
-    hide2PBar();
-    var btn = document.getElementById('two-p-btn');
-    if (btn) { btn.textContent='2P MODE'; btn.style.borderColor=''; btn.style.color=''; }
-    sub = _p1wins > _p2wins
-      ? _p1name + ' WINS! (' + _p1wins + ' vs ' + _p2wins + ')'
-      : _p2wins > _p1wins
-      ? _p2name + ' WINS! (' + _p2wins + ' vs ' + _p1wins + ')'
-      : 'TIE GAME! ' + _p1wins + '-' + _p2wins;
-  } else {
-    sub = T.mode==='mega' ? 'MEGA TOURNAMENT CHAMPION' : 'TOURNAMENT WINNER';
-  }
-  document.getElementById('champ-sub').textContent = sub;
-  document.getElementById('champ-card').innerHTML =
-    '<div style="font-family:monospace;font-size:7px;color:#8888aa">' + (poke.id<10000?'#'+String(poke.id).padStart(3,'0')+' GEN '+genLbl(poke.id):genLbl(poke.id)) + '</div>'
-    + '<img class="champ-img" src="' + imgUrl(poke.id) + '" alt="' + cleanName(poke.name) + '"'
-    + ' onerror="this.onerror=null;this.src=\'' + imgFb(poke.id) + '\'">'
-    + '<div class="champ-name">' + cleanName(poke.name) + '</div>'
-    + '<div class="poke-types" style="justify-content:center">' + typeH + '</div>'
-    + '<div style="font-family:monospace;font-size:9px;color:#ffcb05">BST: ' + bst(poke.stats) + '</div>';
-  var mins = Math.round((Date.now() - _tourneyStartTime) / 60000);
-  var statsLine = _tourneyMatches + ' battles &middot; ' + mins + ' min' + (_tourneyUpsets>0 ? ' &middot; ' + _tourneyUpsets + ' upsets' : '');
-  document.getElementById('champ-btns').innerHTML =
-    '<button class="champ-btn-pri" onclick="if(_replayFn)_replayFn()">REMATCH!</button>'
-    + '<button class="champ-btn-sec" onclick="_bracketFromScreen=\'champ-screen\';renderBracketView();go(\'bracket-screen\')">BRACKET</button>'
-    + '<button class="champ-btn-sec" onclick="openHOF()">HALL OF FAME</button>'
-    + '<button class="champ-btn-sec" onclick="go(\'home-screen\')">HOME</button>';
-  // Mini stats under buttons
-  var statsDiv = document.createElement('div');
-  statsDiv.style.cssText = 'font-family:monospace;font-size:8px;color:#444466;text-align:center;margin-top:6px;letter-spacing:1px;';
-  statsDiv.innerHTML = statsLine;
-  document.getElementById('champ-btns').appendChild(statsDiv);
-  go('champ-screen');
-  spawnConfetti();
-  try { playFanfare(); } catch(e) {}
-  // Champion roar!
-  setTimeout(function(){ try { playCry(poke); } catch(e) {} }, 1200);
-}
-
-// ─────────────────────────────────────────
-// 13. RANDOM PICKER
-// ─────────────────────────────────────────
-var _pickerBusy = false;
-function launchPicker() {
-  if (_pickerBusy) return;
-  _pickerBusy = true;
-  go('pickerBattle');
-  var ph = '<div style="height:160px;display:flex;align-items:center;justify-content:center">'
-    + '<div class="pokeball" style="width:44px;height:44px;border-width:4px"></div></div>';
-  var pa = document.getElementById('pick-a'); var pb = document.getElementById('pick-b');
-  pa.innerHTML = ph; pb.innerHTML = ph; pa.classList.add('locked'); pb.classList.add('locked');
-  document.getElementById('picker-result').textContent = '';
-  var ids = shuffle(allIds(state.pickerGens));
-  var filtered = []; var limit = (state.pickerTypes.size || state.pickerMegas) ? 80 : 2;
-  var promise = Promise.resolve();
-  ids.forEach(function(id) {
-    promise = promise.then(function() {
-      if (!state.pickerMegas && !state.pickerTypes.size && filtered.length >= 2) return;
-      if (filtered.length >= limit) return;
-      return fetchPoke(id).then(function(d) {
-        if (!state.pickerTypes.size || d.types.some(function(t){return state.pickerTypes.has(t.type.name);})) {
-          filtered.push(d);
-        }
-      }).catch(function(){});
-    });
-  });
-  if (state.pickerMegas) {
-    promise = promise.then(function() { return fetchMegaPool(state.pickerTypes); })
-      .then(function(megas) { megas.forEach(function(m){filtered.push(m);}); });
-  }
-  promise.then(function() {
-    _pickerBusy = false;
-    if (filtered.length < 2) {
-      document.getElementById('picker-result').textContent = 'NOT ENOUGH POKEMON! CHANGE FILTERS.';
-      return;
-    }
-    var sh = shuffle(filtered); var p1 = sh[0]; var p2 = sh[1];
-    renderCard(pa, p1); renderCard(pb, p2);
-    pa.classList.remove('locked'); pb.classList.remove('locked');
-    pa.onclick = function() { pickerPick('a', p1, p2); };
-    pb.onclick = function() { pickerPick('b', p1, p2); };
-    var t1 = bst(p1.stats); var t2 = bst(p2.stats);
-    document.getElementById('picker-result').textContent =
-      t1>t2 ? cleanName(p1.name)+' HAS MORE BASE STATS! ('+t1+' vs '+t2+')' :
-      t2>t1 ? cleanName(p2.name)+' HAS MORE BASE STATS! ('+t2+' vs '+t1+')' :
-      'PERFECTLY MATCHED! BOTH HAVE '+t1+' BASE STATS';
-  }).catch(function() {
-    _pickerBusy = false;
-    document.getElementById('picker-result').textContent = 'ERROR! CHECK CONNECTION.';
-  });
-}
-function pickerPick(side, p1, p2) {
-  var pa = document.getElementById('pick-a'); var pb = document.getElementById('pick-b');
-  if (pa.classList.contains('winner') || pa.classList.contains('loser')) return;
-  triggerFlash();
-  pa.classList.add(side==='a' ? 'winner' : 'loser', 'locked');
-  pb.classList.add(side==='b' ? 'winner' : 'loser', 'locked');
-  pa.onclick = null; pb.onclick = null;
-  var winner = side==='a' ? p1 : p2;
-  recordWin(winner.id); recordPick();
-  try { playPickSound(); } catch(e) {}
-  try { playCry(winner); } catch(e) {}
-  try {
-    var pt = winner.types[0] && winner.types[0].type.name;
-    spawnTypeFX(pt, side==='a' ? pa : pb);
-  } catch(e) {}
-}
-
-// ─────────────────────────────────────────
-// 14. MINI TOURNAMENT
-// ─────────────────────────────────────────
-function launchMini() {
-  go('loading-screen'); setLoad('PICKING FIGHTERS...',0);
-  var ids = shuffle(allIds(state.miniGens)); var chosen = [];
-  var promise = Promise.resolve();
-  ids.forEach(function(id) {
-    promise = promise.then(function() {
-      if (chosen.length >= state.miniSize * 3) return;
-      return fetchPoke(id).then(function(d) {
-        if (!state.miniTypes.size || d.types.some(function(t){return state.miniTypes.has(t.type.name);})) {
-          chosen.push(d);
-        }
-        setLoad('LOADING: '+Math.min(chosen.length,state.miniSize)+' / '+state.miniSize, Math.min(chosen.length/state.miniSize,.85));
-      }).catch(function(){});
-    });
-  });
-  if (state.miniMegas) {
-    promise = promise.then(function() { setLoad('LOADING MEGAS...',.88); return fetchMegaPool(state.miniTypes); })
-      .then(function(megas) { megas.forEach(function(m){chosen.push(m);}); });
-  }
-  promise.then(function() {
-    var final = shuffle(chosen).slice(0, state.miniSize);
-    if (final.length < 2) { alert('Not enough Pokemon! Adjust filters.'); go('miniSetup'); return; }
-    setLoad('READY!', 1); _replayFn = launchMini;
-    setTimeout(function() { startTournament(final, 'mini'); }, 300);
-  }).catch(function() { setLoad('ERROR! CHECK CONNECTION.', 0); setTimeout(function(){go('miniSetup');},2000); });
-}
-
-// ─────────────────────────────────────────
-// 15. MEGA TOURNAMENT
-// ─────────────────────────────────────────
-function launchMega() {
-  go('loading-screen'); setLoad('LOADING ALL POKEMON...',0);
-  var uniqueIds = [];
-  var seen = {};
-  allIds(state.megaGens).forEach(function(id) { if (!seen[id]) { seen[id]=true; uniqueIds.push(id); } });
-  var result = []; var seenResult = {}; var B = 8;
-  var promise = Promise.resolve();
-  for (var i = 0; i < uniqueIds.length; i += B) {
-    (function(batch, idx) {
-      promise = promise.then(function() {
-        return Promise.all(batch.map(function(id) {
-          return fetchPoke(id).then(function(d) {
-            if (!seenResult[d.id]) {
-              seenResult[d.id] = true;
-              if (!state.megaTypes.size || d.types.some(function(t){return state.megaTypes.has(t.type.name);})) {
-                result.push(d);
-              }
-            }
-          }).catch(function(){});
-        })).then(function() {
-          setLoad('LOADING: '+Math.round((idx+B)/uniqueIds.length*100)+'%\n'+result.length+' POKEMON FOUND', Math.min((idx+B)/uniqueIds.length,.9));
-          return new Promise(function(r){setTimeout(r,10);});
-        });
-      });
-    })(uniqueIds.slice(i, i+B), i);
-  }
-  if (state.megaMegas) {
-    promise = promise.then(function() { setLoad('LOADING MEGAS...',.92); return fetchMegaPool(state.megaTypes); })
-      .then(function(megas) { megas.forEach(function(m){if(!seenResult[m.id]){seenResult[m.id]=true;result.push(m);}}); });
-  }
-  promise.then(function() {
-    if (result.length < 2) { alert('Not enough Pokemon! Adjust filters.'); go('megaSetup'); return; }
-    setLoad(result.length + ' POKEMON READY!', 1); _replayFn = launchMega;
-    setTimeout(function() { startTournament(result, 'mega'); }, 400);
-  }).catch(function() { setLoad('ERROR! CHECK CONNECTION.',0); setTimeout(function(){go('megaSetup');},2500); });
-}
-
-// ─────────────────────────────────────────
-// 16. TYPE CLASH
-// ─────────────────────────────────────────
-var _clash = {poolA:[],poolB:[],cycleA:[],cycleB:[],posA:0,posB:0,cycleNumA:1,cycleNumB:1,score:{a:0,b:0,round:0},done:false};
-function buildClashCycle(pool) {
-  var groups = {};
-  pool.forEach(function(p) { var w=getWinCount(p.id); if(!groups[w])groups[w]=[]; groups[w].push(p); });
-  Object.keys(groups).forEach(function(w){groups[w]=shuffle(groups[w]);});
-  var levels = Object.keys(groups).map(Number).sort(function(a,b){return b-a;});
-  var cycle = [];
-  levels.forEach(function(w){groups[w].forEach(function(p){cycle.push(p);});});
-  return cycle;
-}
-function launchClash() {
-  var tA = [...state.clashTypeA][0]; var tB = [...state.clashTypeB][0];
-  if (!tA || !tB || tA===tB) return;
-  go('loading-screen'); setLoad(tA.toUpperCase()+' VS '+tB.toUpperCase()+'\nLOADING...',0);
-  var ids = allIds(state.clashGens); var pA=[]; var pB=[]; var B=8;
-  var promise = Promise.resolve();
-  for (var i = 0; i < ids.length; i += B) {
-    (function(batch, idx) {
-      promise = promise.then(function() {
-        return Promise.all(batch.map(function(id) {
-          return fetchPoke(id).then(function(d) {
-            var types = d.types.map(function(t){return t.type.name;});
-            if (types.indexOf(tA) > -1) pA.push(d);
-            if (types.indexOf(tB) > -1) pB.push(d);
-          }).catch(function(){});
-        })).then(function() {
-          setLoad('LOADING '+Math.round((idx+B)/ids.length*100)+'%', (idx+B)/ids.length);
-          return new Promise(function(r){setTimeout(r,10);});
-        });
-      });
-    })(ids.slice(i, i+B), i);
-  }
-  if (state.clashMegas) {
-    promise = promise.then(function(){return fetchMegaPool(new Set());}).then(function(megas){
-      megas.forEach(function(m){
-        var types=m.types.map(function(t){return t.type.name;});
-        if(types.indexOf(tA)>-1)pA.push(m);
-        if(types.indexOf(tB)>-1)pB.push(m);
-      });
-    });
-  }
-  promise.then(function() {
-    if (!pA.length || !pB.length) { alert('Not enough Pokemon for one or both types!'); go('clashSetup'); return; }
-    var cycA = buildClashCycle(pA); var cycB = buildClashCycle(pB);
-    _clash = {poolA:pA,poolB:pB,cycleA:cycA,cycleB:cycB,posA:0,posB:0,cycleNumA:1,cycleNumB:1,score:{a:0,b:0,round:0},done:false};
-    renderClashRound(cycA[0], cycB[0]); go('clash-screen');
-  }).catch(function(){setLoad('ERROR! CHECK CONNECTION.',0);setTimeout(function(){go('clashSetup');},2000);});
-}
-function renderClashRound(pA, pB) {
-  var tA=[...state.clashTypeA][0]||''; var tB=[...state.clashTypeB][0]||'';
-  var cA=TC[tA]||'#888'; var cB=TC[tB]||'#888';
-  var maxR = state.clashRounds===999 ? Math.max(_clash.poolA.length,_clash.poolB.length) : state.clashRounds;
-  var cycA = _clash.cycleNumA>1 ? ' [C'+_clash.cycleNumA+']' : '';
-  var cycB = _clash.cycleNumB>1 ? ' [C'+_clash.cycleNumB+']' : '';
-  document.getElementById('clash-score').innerHTML =
-    '<span style="color:'+cA+'">'+tA.toUpperCase()+cycA+' '+_clash.score.a+'</span>'
-    +'  -  ROUND '+(_clash.score.round+1)+(state.clashRounds===999?'':'/'+maxR)
-    +'  -  <span style="color:'+cB+'">'+_clash.score.b+cycB+' '+tB.toUpperCase()+'</span>';
-  document.getElementById('clash-types-row').innerHTML =
-    '<span class="type-badge" style="background:'+cA+'22;color:'+cA+';border-color:'+cA+'44;font-size:8px;padding:5px 12px">'+TYPE_EMOJI[tA]+' '+tA+'</span>'
-    +'<span style="font-family:monospace;font-size:10px;color:#888">VS</span>'
-    +'<span class="type-badge" style="background:'+cB+'22;color:'+cB+';border-color:'+cB+'44;font-size:8px;padding:5px 12px">'+TYPE_EMOJI[tB]+' '+tB+'</span>';
-  var ca=document.getElementById('clash-a'); var cb=document.getElementById('clash-b');
-  renderCard(ca, pA); renderCard(cb, pB);
-  ca.classList.remove('winner','loser','locked'); cb.classList.remove('winner','loser','locked');
-  ca.onclick=function(){handleClashPick('a');}; cb.onclick=function(){handleClashPick('b');};
-  var hint=document.getElementById('clash-hint');
-  if(hint){hint.style.color='#9999bb';hint.textContent='TAP YOUR FAVOURITE TO WIN THE ROUND!';}
-}
-function handleClashPick(side) {
-  if (_clash.done) return;
-  triggerFlash();
-  var ca=document.getElementById('clash-a'); var cb=document.getElementById('clash-b');
-  ca.classList.add(side==='a'?'winner':'loser','locked');
-  cb.classList.add(side==='b'?'winner':'loser','locked');
-  ca.onclick=null; cb.onclick=null;
-  // Play winner's cry + particle FX
-  var clashWinner = side==='a' ? _clash.cycleA[_clash.posA] : _clash.cycleB[_clash.posB];
-  try { playCry(clashWinner); } catch(e) {}
-  try {
-    var ct = clashWinner.types[0] && clashWinner.types[0].type.name;
-    spawnTypeFX(ct, side==='a' ? ca : cb);
-  } catch(e) {}
-  var tA=[...state.clashTypeA][0]; var tB=[...state.clashTypeB][0];
-  _clash.score.a+=(side==='a'?1:0); _clash.score.b+=(side==='b'?1:0); _clash.score.round++;
-  var maxR=state.clashRounds===999?Math.max(_clash.poolA.length,_clash.poolB.length):state.clashRounds;
-  var need=state.clashRounds===999?Infinity:Math.ceil(state.clashRounds/2);
-  if (_clash.score.a>=need||_clash.score.b>=need||_clash.score.round>=maxR) {
-    _clash.done=true;
-    var wt=_clash.score.a>_clash.score.b?tA:_clash.score.b>_clash.score.a?tB:'TIE';
-    var hint=document.getElementById('clash-hint');
-    if(hint){hint.style.color=TC[wt]||'#ffcb05';hint.textContent=wt==='TIE'?'ITS A TIE! '+_clash.score.a+'-'+_clash.score.b:wt.toUpperCase()+' WINS! '+_clash.score.a+'-'+_clash.score.b;}
-    setTimeout(function(){showClashResult(wt,_clash.score.a,_clash.score.b,tA,tB);},1400);
-    return;
-  }
-  try { playPickSound(); } catch(e) {}
-  setTimeout(function() {
-    _clash.posA++;
-    if (_clash.posA>=_clash.cycleA.length){_clash.cycleA=buildClashCycle(_clash.poolA);_clash.posA=0;_clash.cycleNumA++;}
-    _clash.posB++;
-    if (_clash.posB>=_clash.cycleB.length){_clash.cycleB=buildClashCycle(_clash.poolB);_clash.posB=0;_clash.cycleNumB++;}
-    renderClashRound(_clash.cycleA[_clash.posA],_clash.cycleB[_clash.posB]);
-  }, 850);
-}
-function showClashResult(wt, sA, sB, tA, tB) {
-  var col = TC[wt] || '#ffcb05';
-  document.getElementById('champ-title').textContent = wt==='TIE' ? 'TIE GAME!' : 'TYPE WINS!';
-  document.getElementById('champ-sub').textContent = 'TYPE CLASH RESULT';
-  document.getElementById('champ-card').innerHTML =
-    '<div style="font-size:44px;margin:4px 0">'+(wt==='TIE'?'&#129309;':'&#127942;')+'</div>'
-    +'<div style="font-family:Bangers,Impact,cursive;font-size:36px;color:'+col+';letter-spacing:3px">'+(wt==='TIE'?"IT'S A TIE!":wt.toUpperCase())+'</div>'
-    +'<div style="font-family:monospace;font-size:10px;color:#888;margin-top:8px">'
-    +tA.toUpperCase()+' <b style="color:#ffcb05">'+sA+'</b> - <b style="color:#ffcb05">'+sB+'</b> '+tB.toUpperCase()+'</div>';
-  document.getElementById('champ-btns').innerHTML =
-    '<button class="champ-btn-pri" onclick="launchClash()">REMATCH!</button>'
-    +'<button class="champ-btn-sec" onclick="go(\'clashSetup\')">NEW CLASH</button>'
-    +'<button class="champ-btn-sec" onclick="go(\'home-screen\')">HOME</button>';
-  go('champ-screen');
-  spawnConfetti();
-}
-
-// ─────────────────────────────────────────
-// 17. INIT (always last)
-// ─────────────────────────────────────────
-initFilters();
-showResumeBanner();
-</script>
+<script src="./app.js"></script>
 </body>
 </html>

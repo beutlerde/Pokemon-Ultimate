@@ -1,12 +1,14 @@
-// Pokemon Ultimate Service Worker v12
+// Pokémon Ultimate Service Worker — Championship Arena
 // Two-layer cache: shell (always fast) + pokemon data (cache as you play)
 
-var SHELL_CACHE = 'poke-shell-v14';
-var POKE_CACHE  = 'poke-data-v14';
+var SHELL_CACHE = 'poke-shell-v15';
+var POKE_CACHE  = 'poke-data-v15';
 
 var SHELL_URLS = [
   '/Pokemon-Ultimate/',
   '/Pokemon-Ultimate/index.html',
+  '/Pokemon-Ultimate/styles.css',
+  '/Pokemon-Ultimate/app.js',
   '/Pokemon-Ultimate/manifest.json',
   '/Pokemon-Ultimate/icon-192.png',
   '/Pokemon-Ultimate/icon-512.png',
@@ -35,9 +37,13 @@ self.addEventListener('activate', function(event) {
 self.addEventListener('fetch', function(event) {
   var url = event.request.url;
 
-  // App shell - cache first, always instant
-  if (url.indexOf('beutlerde.github.io/Pokemon-Ultimate') > -1 || 
-      url.indexOf('icon-') > -1 || url.indexOf('manifest.json') > -1 || url.indexOf('favicon') > -1) {
+  // App shell - cache first
+  if (url.indexOf('beutlerde.github.io/Pokemon-Ultimate') > -1 ||
+      url.indexOf('icon-') > -1 ||
+      url.indexOf('manifest.json') > -1 ||
+      url.indexOf('favicon') > -1 ||
+      url.indexOf('styles.css') > -1 ||
+      url.indexOf('app.js') > -1) {
     event.respondWith(
       caches.match(event.request).then(function(cached) {
         return cached || fetch(event.request).then(function(resp) {
@@ -49,7 +55,7 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
-  // Pokemon images - network first, cache fallback (offline safe)
+  // Pokemon images (incl. animated sprites) - network first, cache fallback
   if (url.indexOf('raw.githubusercontent.com') > -1) {
     event.respondWith(
       fetch(event.request).then(function(resp) {
@@ -62,7 +68,7 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
-  // PokeAPI data - cache first (data never changes, loads instantly repeat visits)
+  // PokeAPI data - cache first
   if (url.indexOf('pokeapi.co') > -1) {
     event.respondWith(
       caches.match(event.request).then(function(cached) {
@@ -91,13 +97,10 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
-  // Default
   event.respondWith(fetch(event.request).catch(function() { return caches.match(event.request); }));
 });
 
-// Messages from the app
 self.addEventListener('message', function(event) {
-  // Cache stats for home screen badge
   if (event.data === 'GET_CACHE_SIZE') {
     caches.open(POKE_CACHE).then(function(cache) {
       cache.keys().then(function(keys) {
@@ -105,7 +108,6 @@ self.addEventListener('message', function(event) {
       });
     });
   }
-  // App is asking new SW to take control immediately
   if (event.data === 'SKIP_WAITING') {
     self.skipWaiting();
   }
