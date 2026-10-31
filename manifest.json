@@ -1,18 +1,15 @@
 {
-  "name": "Pok\u00e9mon Ultimate",
-  "short_name": "Pok\u00e9mon",
-  "description": "4 Pok\u00e9mon battle games in one \u2014 Random Picker, Mini Tournament, Mega Tournament & Type Clash. Gen 1\u20134!",
+  "name": "Pokémon Ultimate — Championship Arena",
+  "short_name": "Pokémon Ultimate",
+  "description": "Championship arena for Random Picker, Mini Tournament, Mega Tournament & Type Clash. Living sprites. Gen 1–4.",
   "start_url": "/Pokemon-Ultimate/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0b0b18",
-  "theme_color": "#0b0b18",
+  "background_color": "#070b12",
+  "theme_color": "#070b12",
   "scope": "/Pokemon-Ultimate/",
   "lang": "en",
-  "categories": [
-    "games",
-    "entertainment"
-  ],
+  "categories": ["games", "entertainment"],
   "icons": [
     {
       "src": "./icon-192.png",
@@ -32,26 +29,16 @@
     {
       "name": "Random Picker",
       "short_name": "Picker",
-      "description": "Pick two random Pok\u00e9mon",
+      "description": "Pick two random Pokémon",
       "url": "/Pokemon-Ultimate/?mode=picker",
-      "icons": [
-        {
-          "src": "./icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Mega Tournament",
       "short_name": "Mega",
-      "description": "All Pok\u00e9mon, one bracket",
+      "description": "All Pokémon, one bracket",
       "url": "/Pokemon-Ultimate/?mode=mega",
-      "icons": [
-        {
-          "src": "./icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
